@@ -3,28 +3,30 @@ import React from 'react';
 
 const Navbar: React.FC = () => {
   return (
-    <nav className='h-[10vh] bg-gray-800'>
+    <nav className='h-[10vh] content-center bg-gray-800'>
       <div className='container mx-auto flex items-center justify-between'>
-        <div className='text-xl font-bold text-white'>Your App Name</div>
+        <div className='text-xl font-bold text-white'>
+          <Link href='/'>HemoRenew</Link>
+        </div>
         <ul className='flex space-x-4'>
           <li>
             <Link href='/user' className='text-white hover:text-gray-300'>
-              User
+              Usuario
             </Link>
           </li>
           <li>
             <Link href='/patient' className='text-white hover:text-gray-300'>
-              Patient
+              Paciente
             </Link>
           </li>
           <li>
             <Link href='/filter' className='text-white hover:text-gray-300'>
-              Filter
+              Filtro
             </Link>
           </li>
           <li>
             <Link href='/washing' className='text-white hover:text-gray-300'>
-              Washing
+              Lavado
             </Link>
           </li>
         </ul>

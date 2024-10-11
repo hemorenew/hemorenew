@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import User from 'core/models/User';
+import Patient from 'core/models/Patient';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { dbConnect } from 'utils/mongosee';
 
@@ -14,29 +14,29 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (method) {
     case 'GET':
       try {
-        const user = await User.findById(id);
-        if (!user) {
-          return res.status(404).end(`User not found`);
+        const patient = await Patient.findById(id);
+        if (!patient) {
+          return res.status(404).end(`Patient not found`);
         }
-        return res.status(200).json({ user });
+        return res.status(200).json({ patient });
       } catch (error: any) {
         return res.status(500).json({ msg: error.message });
       }
     case 'PUT':
       try {
-        const updateTask = await User.findByIdAndUpdate(id, body, {
+        const updatedPatient = await Patient.findByIdAndUpdate(id, body, {
           new: true,
         });
-        if (!updateTask) return res.status(404).end(`User not found`);
-        return res.status(200).json({ updateTask });
+        if (!updatedPatient) return res.status(404).end(`Patient not found`);
+        return res.status(200).json({ updatedPatient });
       } catch (error: any) {
         return res.status(400).json({ msg: error.message });
       }
     case 'DELETE':
       try {
-        const deleteTask = await User.findByIdAndDelete(id);
-        if (!deleteTask) return res.status(404).end(`User not found`);
-        return res.status(204).json({ deleteTask });
+        const deletedPatient = await Patient.findByIdAndDelete(id);
+        if (!deletedPatient) return res.status(404).end(`Patient not found`);
+        return res.status(204).json({ deletedPatient });
       } catch (error: any) {
         return res.status(400).json({ msg: error.message });
       }

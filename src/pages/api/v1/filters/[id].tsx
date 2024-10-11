@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import User from 'core/models/User';
+import Filter from 'core/models/Filter';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { dbConnect } from 'utils/mongosee';
 
@@ -14,29 +14,29 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (method) {
     case 'GET':
       try {
-        const user = await User.findById(id);
-        if (!user) {
-          return res.status(404).end(`User not found`);
+        const filter = await Filter.findById(id);
+        if (!filter) {
+          return res.status(404).end(`Filter not found`);
         }
-        return res.status(200).json({ user });
+        return res.status(200).json({ filter });
       } catch (error: any) {
         return res.status(500).json({ msg: error.message });
       }
     case 'PUT':
       try {
-        const updateTask = await User.findByIdAndUpdate(id, body, {
+        const updatedFilter = await Filter.findByIdAndUpdate(id, body, {
           new: true,
         });
-        if (!updateTask) return res.status(404).end(`User not found`);
-        return res.status(200).json({ updateTask });
+        if (!updatedFilter) return res.status(404).end(`Filter not found`);
+        return res.status(200).json({ updatedFilter });
       } catch (error: any) {
         return res.status(400).json({ msg: error.message });
       }
     case 'DELETE':
       try {
-        const deleteTask = await User.findByIdAndDelete(id);
-        if (!deleteTask) return res.status(404).end(`User not found`);
-        return res.status(204).json({ deleteTask });
+        const deletedFilter = await Filter.findByIdAndDelete(id);
+        if (!deletedFilter) return res.status(404).end(`Filter not found`);
+        return res.status(204).json({ deletedFilter });
       } catch (error: any) {
         return res.status(400).json({ msg: error.message });
       }

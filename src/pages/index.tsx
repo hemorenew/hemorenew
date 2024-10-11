@@ -2,8 +2,8 @@ import React from 'react';
 
 function index() {
   return (
-    <div className='flex h-screen flex-col items-center justify-center bg-black text-white'>
-      <h1 className='text-white'>Hola mundo</h1>
+    <div className='h-full content-center text-center text-2xl'>
+      Bienvenido a HemoRenew
     </div>
   );
 }
