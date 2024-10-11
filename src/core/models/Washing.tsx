@@ -3,15 +3,13 @@ import mongoose, { Schema } from 'mongoose';
 const WashingSchema = new Schema(
   {
     patient: {
-      type: String,
-      trim: true,
-      maxlength: [150, 'Name cannot be more than 150 characters'],
+      type: Schema.Types.ObjectId,
+      ref: 'Patient',
       required: true,
     },
     filter: {
-      type: String,
-      trim: true,
-      maxlength: [150, 'Name cannot be more than 150 characters'],
+      type: Schema.Types.ObjectId,
+      ref: 'Filter',
       required: true,
     },
     startDate: {

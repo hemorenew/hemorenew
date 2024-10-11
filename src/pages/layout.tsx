@@ -1,7 +1,6 @@
+import Footer from 'core/components/layout/Footer';
+import Navbar from 'core/components/layout/Navbar';
 import React from 'react';
-
-import Footer from '../core/components/layout/footer';
-import Navbar from '../core/components/layout/navbar';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,7 +10,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className='font-primary'>
       <Navbar />
-      <main className='h-full min-h-max'>{children}</main>
+      <main className='h-[85vh] min-h-full'>{children}</main>
       <Footer />
     </div>
   );

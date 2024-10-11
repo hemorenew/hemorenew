@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import bcrypt from 'bcryptjs';
-import User from 'core/models/User';
+import Patient from 'core/models/Patient';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { dbConnect } from 'utils/mongosee';
 
@@ -12,19 +11,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (method) {
     case 'GET':
       try {
-        const allUsers = await User.find({});
-        return res.status(200).json(allUsers);
+        const allPatients = await Patient.find({});
+        return res.status(200).json(allPatients);
       } catch (error: any) {
         return res.status(400).json({ error: error.message });
       }
     case 'POST':
       try {
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(body.password, saltRounds);
-        body.password = hashedPassword;
-        const newUser = new User(body);
-        const savedUser = await newUser.save();
-        return res.status(201).json(savedUser);
+        const newPatient = new Patient(body);
+        const savedPatient = await newPatient.save();
+        return res.status(201).json(savedPatient);
       } catch (error: any) {
         console.error('Error stack:', error.stack);
 

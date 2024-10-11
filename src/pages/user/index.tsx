@@ -17,7 +17,15 @@ interface User {
 const UserCRUD: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const { register, handleSubmit, reset, setValue } = useForm<User>();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const { register, handleSubmit, reset, setValue, watch } = useForm<
+    User & { confirmPassword: string }
+  >();
+
+  // Add these lines to watch the password fields
+  const password = watch('password');
+  const confirmPassword = watch('confirmPassword');
 
   useEffect(() => {
     fetchUsers();
@@ -32,12 +40,35 @@ const UserCRUD: React.FC = () => {
     }
   };
 
-  const onSubmit = async (data: User) => {
+  const generateUsername = (
+    firstName: string,
+    lastName: string,
+    ci: string
+  ) => {
+    const initial = firstName.charAt(0).toLowerCase();
+    const surname = lastName.split(' ')[0].toLowerCase();
+    const ciLastFour = ci.slice(-4);
+    return `${initial}${surname}${ciLastFour}`;
+  };
+
+  const onSubmit = async (data: User & { confirmPassword: string }) => {
+    if (data.password !== data.confirmPassword) {
+      alert("Passwords don't match");
+      return;
+    }
+
     try {
+      const generatedUsername = generateUsername(
+        data.firstName,
+        data.lastName,
+        data.ci
+      );
+      const userData = { ...data, user: generatedUsername };
+
       if (editingUser) {
-        await axios.put(`/api/v1/users/${editingUser._id}`, data);
+        await axios.put(`/api/v1/users/${editingUser._id}`, userData);
       } else {
-        await axios.post('/api/v1/users', data);
+        await axios.post('/api/v1/users', userData);
       }
       fetchUsers();
       reset();
@@ -61,81 +92,92 @@ const UserCRUD: React.FC = () => {
   const editUser = (user: User) => {
     setEditingUser(user);
     Object.keys(user).forEach((key) => {
-      setValue(key as keyof User, user[key as keyof User]);
+      if (key !== 'password') {
+        setValue(key as keyof User, user[key as keyof User]);
+      }
     });
   };
 
   return (
-    <div className='h-auto min-h-[83vh] bg-gray-100 py-8'>
+    <div className='h-full min-h-max bg-gray-100 py-8'>
       <div className='container mx-auto px-4'>
-        <h1 className='mb-8 text-3xl font-bold text-gray-800'>
+        <h1 className='mb-8 text-2xl font-bold text-gray-800'>
           User Management
         </h1>
 
-        <div className='grid gap-8 md:grid-cols-2'>
-          <div className='rounded-lg bg-white p-6 shadow-md'>
-            <h2 className='mb-4 text-xl font-semibold'>
-              {editingUser ? 'Edit User' : 'Create New User'}
+        <div className='grid gap-8 lg:grid-cols-3'>
+          <div className='col-span-1 rounded-lg bg-white p-6 shadow-md'>
+            <h2 className='mb-4 text-lg font-semibold'>
+              {editingUser ? 'Edit User' : 'Add New User'}
             </h2>
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
-              <div className='grid gap-4 sm:grid-cols-2'>
+              <input
+                {...register('firstName')}
+                placeholder='First Name'
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              <input
+                {...register('lastName')}
+                placeholder='Last Name'
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              <input
+                {...register('ci')}
+                placeholder='CI'
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              <input
+                {...register('profession')}
+                placeholder='Profession'
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              <input
+                {...register('phone')}
+                placeholder='Phone'
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              <input
+                {...register('password')}
+                type={showPassword ? 'text' : 'password'}
+                placeholder='Password'
+                value={password}
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              <input
+                {...register('confirmPassword')}
+                type={showPassword ? 'text' : 'password'}
+                placeholder='Confirm Password'
+                value={confirmPassword}
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              <div className='flex items-center'>
                 <input
-                  {...register('firstName')}
-                  placeholder='First Name'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  type='checkbox'
+                  id='showPassword'
+                  checked={showPassword}
+                  onChange={() => setShowPassword(!showPassword)}
+                  className='mr-2'
                 />
-                <input
-                  {...register('lastName')}
-                  placeholder='Last Name'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                <input
-                  {...register('ci')}
-                  placeholder='CI'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                <input
-                  {...register('profession')}
-                  placeholder='Profession'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                <input
-                  {...register('phone')}
-                  placeholder='Phone'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                <input
-                  {...register('user')}
-                  placeholder='Username'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                <input
-                  {...register('password')}
-                  type='password'
-                  placeholder='Password'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
+                <label htmlFor='showPassword'>Show password</label>
               </div>
               <button
                 type='submit'
                 className='w-full rounded-md bg-blue-500 py-2 px-4 text-white transition duration-300 hover:bg-blue-600'
               >
-                {editingUser ? 'Update User' : 'Create User'}
+                {editingUser ? 'Update User' : 'Add User'}
               </button>
             </form>
           </div>
 
-          <div className='overflow-x-auto rounded-lg bg-white p-6 shadow-md'>
-            <h2 className='mb-4 text-xl font-semibold'>User List</h2>
+          <div className='col-span-2 overflow-x-auto rounded-lg bg-white p-6 shadow-md'>
+            <h2 className='mb-4 text-lg font-semibold'>User List</h2>
             <table className='w-full'>
               <thead>
                 <tr className='bg-gray-100'>
                   <th className='px-4 py-2 text-left'>Name</th>
                   <th className='px-4 py-2 text-left'>CI</th>
                   <th className='px-4 py-2 text-left'>Profession</th>
-                  <th className='px-4 py-2 text-left'>Phone</th>
                   <th className='px-4 py-2 text-left'>Username</th>
-                  <th className='px-4 py-2 text-left'>Status</th>
                   <th className='px-4 py-2 text-left'>Actions</th>
                 </tr>
               </thead>
@@ -145,9 +187,7 @@ const UserCRUD: React.FC = () => {
                     <td className='px-4 py-2'>{`${user.firstName} ${user.lastName}`}</td>
                     <td className='px-4 py-2'>{user.ci}</td>
                     <td className='px-4 py-2'>{user.profession}</td>
-                    <td className='px-4 py-2'>{user.phone}</td>
                     <td className='px-4 py-2'>{user.user}</td>
-                    <td className='px-4 py-2'>{user.status}</td>
                     <td className='px-4 py-2'>
                       <button
                         onClick={() => editUser(user)}
