@@ -1,4 +1,6 @@
+import axios from 'axios';
 import Link from 'next/link';
+import router from 'next/router';
 import React, { useState } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
@@ -6,6 +8,21 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  const handleLogout = async () => {
+    try {
+      const response = await axios.get('/api/auth/logout');
+      if (response.data.success) {
+        // Clear any client-side auth state
+        // For example, if you're using a context:
+        // setIsLoggedIn(false);
+        // setUserData({});
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <nav className='bg-gray-800'>
@@ -23,7 +40,9 @@ const Navbar: React.FC = () => {
               <NavLink href='/patient'>Paciente</NavLink>
               <NavLink href='/filter'>Filtro</NavLink>
               <NavLink href='/washing'>Lavado</NavLink>
-              <NavLink href='/api/auth/logout'>Cerrar Sesión</NavLink>
+              <NavLink href='/login' onClick={handleLogout}>
+                Cerrar Sesión
+              </NavLink>
             </div>
           </div>
           <div className='flex md:hidden'>
@@ -50,7 +69,7 @@ const Navbar: React.FC = () => {
             <NavLink href='/washing' mobile>
               Lavado
             </NavLink>
-            <NavLink href='/api/auth/logout' mobile>
+            <NavLink href='/login' mobile onClick={handleLogout}>
               Cerrar Sesión
             </NavLink>
           </div>
@@ -64,9 +83,11 @@ const NavLink: React.FC<{
   href: string;
   children: React.ReactNode;
   mobile?: boolean;
-}> = ({ href, children, mobile }) => (
+  onClick?: () => void;
+}> = ({ href, children, mobile, onClick }) => (
   <Link
     href={href}
+    onClick={onClick}
     className={`${
       mobile
         ? 'block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white'

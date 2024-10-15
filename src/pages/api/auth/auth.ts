@@ -15,10 +15,8 @@ export default withSession(
       return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    const { email, password } = req.body;
-
-    const userDoc = await User.findOne({ email });
-
+    const { user, password } = req.body;
+    const userDoc = await User.findOne({ user });
     if (!userDoc) {
       return res
         .status(400)
