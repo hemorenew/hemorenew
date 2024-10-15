@@ -32,7 +32,7 @@ export default async function handler(
 
       console.log(userDoc);
 
-      // await saveSession(userDoc, req);
+      await saveSession(userDoc, req);
       res
         .status(200)
         .json({ success: true, message: 'Logged in successfully' });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { useServerSideLogin } from 'core/hooks/permission/useServerSideLogin';
 import withSession from 'core/lib/session';
