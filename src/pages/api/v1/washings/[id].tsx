@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Washing from 'core/models/Washing';
+import { dbConnect } from 'core/utils/mongosee';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { dbConnect } from 'utils/mongosee';
 
 dbConnect();
 
@@ -30,6 +30,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
             patient: body.patient,
             filter: body.filter,
             startDate: body.startDate,
+            attended: body.attended,
             status: body.status,
           },
           { new: true }

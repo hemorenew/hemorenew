@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import bcrypt from 'bcryptjs';
 import User from 'core/models/User';
+import { dbConnect } from 'core/utils/mongosee';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { dbConnect } from 'utils/mongosee';
 
 dbConnect();
 

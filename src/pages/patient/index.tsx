@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { useServerSideLogin } from 'core/hooks/permission/useServerSideLogin';
+import withSession from 'core/lib/session';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -10,11 +12,12 @@ interface Patient {
   birthDate: string;
   phone: string;
   dryWeight: number;
-  attended: string;
+  attended: any;
   status: string;
 }
 
 const PatientCRUD: React.FC = () => {
+  const [userId, setUserId] = useState<string>('');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
 
@@ -34,6 +37,7 @@ const PatientCRUD: React.FC = () => {
   };
 
   const onSubmit = async (data: Patient) => {
+    data.attended = userId;
     try {
       if (editingPatient) {
         await axios.put(`/api/v1/patients/${editingPatient._id}`, data);
@@ -65,6 +69,16 @@ const PatientCRUD: React.FC = () => {
       setValue(key as keyof Patient, patient[key as keyof Patient]);
     });
   };
+
+  useEffect(() => {
+    axios
+      .get('/api/auth/user')
+      .then((response) => {
+        setUserId(response.data.id);
+      })
+      .catch((error) => console.error('Error fetching user data:', error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className='h-full min-h-max bg-gray-100 py-8'>
@@ -132,6 +146,7 @@ const PatientCRUD: React.FC = () => {
                   <th className='px-4 py-2 text-left'>Fecha de Nacimiento</th>
                   <th className='px-4 py-2 text-left'>Teléfono</th>
                   <th className='px-4 py-2 text-left'>Peso Seco</th>
+                  <th className='px-4 py-2 text-left'>Registrado por</th>
                   <th className='px-4 py-2 text-left'>Acciones</th>
                 </tr>
               </thead>
@@ -143,6 +158,9 @@ const PatientCRUD: React.FC = () => {
                     <td className='px-4 py-2'>{patient.birthDate}</td>
                     <td className='px-4 py-2'>{patient.phone}</td>
                     <td className='px-4 py-2'>{patient.dryWeight}</td>
+                    <td className='px-4 py-2'>
+                      {patient.attended.firstName} {patient.attended.lastName}
+                    </td>
                     <td className='px-4 py-2'>
                       <button
                         onClick={() => editPatient(patient)}
@@ -167,5 +185,7 @@ const PatientCRUD: React.FC = () => {
     </div>
   );
 };
+
+export const getServerSideProps = withSession(useServerSideLogin);
 
 export default PatientCRUD;

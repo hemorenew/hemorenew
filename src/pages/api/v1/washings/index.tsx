@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Filter from 'core/models/Filter';
 import Patient from 'core/models/Patient';
+import User from 'core/models/User';
 import Washing from 'core/models/Washing';
+import { dbConnect } from 'core/utils/mongosee';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { dbConnect } from 'utils/mongosee';
 
 dbConnect();
 
@@ -21,6 +22,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           .populate({
             path: 'filter',
             model: Filter,
+          })
+          .populate({
+            path: 'attended',
+            model: User,
           });
         return res.status(200).json(allWashings);
       } catch (error: any) {

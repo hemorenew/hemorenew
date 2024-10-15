@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Patient from 'core/models/Patient';
+import User from 'core/models/User';
+import { dbConnect } from 'core/utils/mongosee';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { dbConnect } from 'utils/mongosee';
 
 dbConnect();
 
@@ -11,7 +12,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (method) {
     case 'GET':
       try {
-        const allPatients = await Patient.find({});
+        const allPatients = await Patient.find({}).populate({
+          path: 'attended',
+          model: User,
+        });
         return res.status(200).json(allPatients);
       } catch (error: any) {
         return res.status(400).json({ error: error.message });
