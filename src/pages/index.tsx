@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 const Index = () => {
   const [user, setUser] = useState<any>('');
+  console.log('🚀 ~ Index ~ user:', user);
 
   useEffect(() => {
     axios
@@ -17,7 +18,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className='flex h-full  min-h-[84vh] items-center justify-center bg-gray-100 py-8'>
+    <div className='flex h-full  min-h-[84vh] flex-col items-center justify-center bg-gray-100 py-8'>
       <h1 className='mb-4 text-2xl font-bold text-gray-800 sm:text-4xl md:text-5xl'>
         Bienvenido a HemoRenew
       </h1>

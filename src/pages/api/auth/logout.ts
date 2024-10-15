@@ -1,12 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import withSession from 'core/lib/session';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { Session } from 'next-iron-session';
 
-export default withSession(async (req: any, res: any) => {
-  req.session.destroy();
+interface ExtendedNextApiRequest extends NextApiRequest {
+  session: Session;
+}
 
-  res.setHeader('Set-Cookie', [
-    `root_auth_session=; expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly`,
-  ]);
+export default withSession(
+  async (req: ExtendedNextApiRequest, res: NextApiResponse) => {
+    req.session.destroy();
 
-  res.redirect('/login');
-});
+    res.setHeader('Set-Cookie', [
+      'root_auth_session=; Path=/; HttpOnly; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict',
+    ]);
+
+    res.status(200).json({ success: true, message: 'Logged out successfully' });
+  }
+);
