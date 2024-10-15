@@ -15,10 +15,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axios.post('/api/auth/auth', { user, password });
-      console.log('🚀 ~ handleSubmit ~ response:', response.data);
       if (response.data.id) {
-        //save id,firstName,lastName,profession in local storage
-        localStorage.setItem('user', JSON.stringify(response.data));
         router.push('/');
       }
     } catch (err) {

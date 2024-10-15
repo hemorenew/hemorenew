@@ -12,9 +12,9 @@ export default withSession(
       return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    const { user, password } = req.body;
+    const { email, password } = req.body;
 
-    const userDoc = await User.findOne({ user });
+    const userDoc = await User.findOne({ email });
 
     if (!userDoc) {
       return res
@@ -29,8 +29,6 @@ export default withSession(
         .status(400)
         .json({ success: false, message: 'Invalid username or password' });
     }
-
-    console.log('🚀 ~ userDoc:', userDoc);
 
     try {
       const { id, firstName, lastName, profession } = userDoc;

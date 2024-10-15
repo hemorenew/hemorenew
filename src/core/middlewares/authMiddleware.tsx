@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { IronSessionProps } from 'core/interface/type';
 import { withIronSession } from 'next-iron-session';
 
@@ -13,14 +14,16 @@ const authMiddleware = (handler: any) =>
     const isBrowser = /Mozilla/.test(userAgent);
     const referer = req.headers['referer'];
     const isFromFrontendApp =
-      referer && referer.startsWith(process.env.NEXT_PUBLIC_API_URL);
+      referer && referer.startsWith(process.env.NEXT_PUBLIC_URL);
 
-    if (isBrowser && !isFromFrontendApp) {
-      //location / and /user/userRegister
-      const location = req.url === '/' ? '/register' : '/';
+    // Obtener la ruta actual de la solicitud
+    const path = req.url;
 
-      res.writeHead(302, { Location: location });
+    // Verificar si la ruta es /login o /register
+    const isPublicRoute = ['/login', '/register'].includes(path);
 
+    if (isBrowser && !isFromFrontendApp && !isPublicRoute) {
+      res.writeHead(302, { Location: '/login' });
       res.end();
       return;
     }
