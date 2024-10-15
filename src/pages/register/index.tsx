@@ -51,7 +51,9 @@ const Register: React.FC = () => {
       );
       const userData = { ...data, user: generatedUsername };
       await axios.post('/api/v1/users', userData);
-      alert('Usuario registrado exitosamente');
+      alert(
+        `Usuario registrado exitosamente. Tu usuario es: ${generatedUsername}`
+      );
       router.push('/login');
     } catch (error) {
       console.error('Error al registrar usuario:', error);

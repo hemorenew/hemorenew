@@ -114,7 +114,7 @@ const WashingCRUD: React.FC = () => {
   };
 
   return (
-    <div className='h-full min-h-[85vh] bg-gray-100 py-8'>
+    <div className='flex h-full  items-center justify-center bg-gray-100 py-8 lg:min-h-[85vh]'>
       <div className='container mx-auto px-4'>
         <h1 className='mb-8 text-2xl font-bold text-gray-800'>
           Gestión de Lavados
