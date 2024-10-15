@@ -2,7 +2,10 @@
 import bcrypt from 'bcryptjs';
 import withSession from 'core/lib/session';
 import User from 'core/models/User';
+import { dbConnect } from 'core/utils/mongosee';
 import { NextApiRequest, NextApiResponse } from 'next';
+
+dbConnect();
 
 export default withSession(
   async (req: NextApiRequest, res: NextApiResponse) => {
