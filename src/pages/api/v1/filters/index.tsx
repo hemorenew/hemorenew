@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Filter from 'core/models/Filter';
+import { dbConnect } from 'core/utils/mongosee';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { dbConnect } from 'utils/mongosee';
 
 dbConnect();
 

@@ -7,7 +7,7 @@ export const redirectToHome = {
 
 export const redirectToLogin = {
   redirect: {
-    destination: '/auth',
+    destination: '/login',
     permanent: false,
   },
 };

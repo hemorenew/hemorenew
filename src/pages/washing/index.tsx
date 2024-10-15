@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
+import { useServerSideLogin } from 'core/hooks/permission/useServerSideLogin';
+import withSession from 'core/lib/session';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -8,10 +10,12 @@ interface Washing {
   patient: any;
   filter: any;
   startDate: string;
+  attended: any;
   status: string;
 }
 
 const WashingCRUD: React.FC = () => {
+  const [userId, setUserId] = useState<string>('');
   const [washings, setWashings] = useState<Washing[]>([]);
   const [editingWashing, setEditingWashing] = useState<Washing | null>(null);
   const [patients, setPatients] = useState<any[]>([]);
@@ -20,6 +24,12 @@ const WashingCRUD: React.FC = () => {
   const { register, handleSubmit, reset, setValue } = useForm<Washing>();
 
   useEffect(() => {
+    axios
+      .get('/api/auth/user')
+      .then((response) => {
+        setUserId(response.data.id);
+      })
+      .catch((error) => console.error('Error fetching user data:', error));
     fetchWashings();
     fetchPatients();
     fetchFilters();
@@ -28,6 +38,7 @@ const WashingCRUD: React.FC = () => {
   const fetchWashings = async () => {
     try {
       const response = await axios.get('/api/v1/washings');
+      console.log(response.data);
       setWashings(response.data);
     } catch (error) {
       console.error('Error fetching washings:', error);
@@ -53,6 +64,7 @@ const WashingCRUD: React.FC = () => {
   };
 
   const onSubmit = async (data: Washing) => {
+    data.attended = userId;
     try {
       if (editingWashing) {
         const updatedData = {
@@ -102,7 +114,7 @@ const WashingCRUD: React.FC = () => {
   };
 
   return (
-    <div className='h-full min-h-max bg-gray-100 py-8'>
+    <div className='h-full min-h-[85vh] bg-gray-100 py-8'>
       <div className='container mx-auto px-4'>
         <h1 className='mb-8 text-2xl font-bold text-gray-800'>
           Gestión de Lavados
@@ -171,6 +183,7 @@ const WashingCRUD: React.FC = () => {
                 <tr className='bg-gray-100'>
                   <th className='px-4 py-2 text-left'>Paciente</th>
                   <th className='px-4 py-2 text-left'>Filtro</th>
+                  <th className='px-4 py-2 text-left'>Atendido por</th>
                   <th className='px-4 py-2 text-left'>Fecha de Inicio</th>
                   <th className='px-4 py-2 text-left'>Acciones</th>
                 </tr>
@@ -183,6 +196,9 @@ const WashingCRUD: React.FC = () => {
                     </td>
                     <td className='px-4 py-2'>
                       {washing.filter.brand} - {washing.filter.model}
+                    </td>
+                    <td className='px-4 py-2'>
+                      {washing.attended.firstName} {washing.attended.lastName}
                     </td>
                     <td className='px-4 py-2'>
                       {formatDateForDisplay(washing.startDate)}
@@ -211,5 +227,7 @@ const WashingCRUD: React.FC = () => {
     </div>
   );
 };
+
+export const getServerSideProps = withSession(useServerSideLogin);
 
 export default WashingCRUD;

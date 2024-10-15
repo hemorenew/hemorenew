@@ -9,11 +9,11 @@ const Navbar: React.FC = () => {
           <Link href='/'>HemoRenew</Link>
         </div>
         <ul className='flex space-x-4'>
-          <li>
+          {/* <li>
             <Link href='/user' className='text-white hover:text-gray-300'>
               Usuario
             </Link>
-          </li>
+          </li> */}
           <li>
             <Link href='/patient' className='text-white hover:text-gray-300'>
               Paciente
@@ -30,13 +30,11 @@ const Navbar: React.FC = () => {
             </Link>
           </li>
           <li>
-            <Link href='/login' className='text-white hover:text-gray-300'>
-              Login
-            </Link>
-          </li>
-          <li>
-            <Link href='/register' className='text-white hover:text-gray-300'>
-              Register
+            <Link
+              href='/api/auth/logout'
+              className='text-white hover:text-gray-300'
+            >
+              Cerrar Sesión
             </Link>
           </li>
         </ul>

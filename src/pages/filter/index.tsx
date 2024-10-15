@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { useServerSideLogin } from 'core/hooks/permission/useServerSideLogin';
+import withSession from 'core/lib/session';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -151,5 +153,7 @@ const FilterCRUD: React.FC = () => {
     </div>
   );
 };
+
+export const getServerSideProps = withSession(useServerSideLogin);
 
 export default FilterCRUD;

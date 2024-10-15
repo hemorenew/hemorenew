@@ -12,6 +12,11 @@ const WashingSchema = new Schema(
       ref: 'Filter',
       required: true,
     },
+    attended: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      require: true,
+    },
     startDate: {
       type: Date,
     },

@@ -14,9 +14,12 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/auth/login', { user, password });
-      if (response.data.success) {
-        router.push('/'); // Redirect to home page after successful login
+      const response = await axios.post('/api/auth/auth', { user, password });
+      console.log('🚀 ~ handleSubmit ~ response:', response.data);
+      if (response.data.id) {
+        //save id,firstName,lastName,profession in local storage
+        localStorage.setItem('user', JSON.stringify(response.data));
+        router.push('/');
       }
     } catch (err) {
       setError('Invalid username or password');
