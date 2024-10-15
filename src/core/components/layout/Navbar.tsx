@@ -1,46 +1,80 @@
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleMenu = () => setIsOpen(!isOpen);
+
   return (
-    <nav className='h-[10vh] content-center bg-gray-800'>
-      <div className='container mx-auto flex items-center justify-between'>
-        <div className='text-xl font-bold text-white'>
-          <Link href='/'>HemoRenew</Link>
-        </div>
-        <ul className='flex space-x-4'>
-          {/* <li>
-            <Link href='/user' className='text-white hover:text-gray-300'>
-              Usuario
-            </Link>
-          </li> */}
-          <li>
-            <Link href='/patient' className='text-white hover:text-gray-300'>
-              Paciente
-            </Link>
-          </li>
-          <li>
-            <Link href='/filter' className='text-white hover:text-gray-300'>
-              Filtro
-            </Link>
-          </li>
-          <li>
-            <Link href='/washing' className='text-white hover:text-gray-300'>
-              Lavado
-            </Link>
-          </li>
-          <li>
-            <Link
-              href='/api/auth/logout'
-              className='text-white hover:text-gray-300'
+    <nav className='bg-gray-800'>
+      <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
+        <div className='flex h-16 items-center justify-between'>
+          <div className='flex items-center'>
+            <div className='flex-shrink-0'>
+              <Link href='/' className='text-xl font-bold text-white'>
+                HemoRenew
+              </Link>
+            </div>
+          </div>
+          <div className='hidden md:block'>
+            <div className='ml-10 flex items-baseline space-x-4'>
+              <NavLink href='/patient'>Paciente</NavLink>
+              <NavLink href='/filter'>Filtro</NavLink>
+              <NavLink href='/washing'>Lavado</NavLink>
+              <NavLink href='/api/auth/logout'>Cerrar Sesión</NavLink>
+            </div>
+          </div>
+          <div className='flex md:hidden'>
+            <button
+              onClick={toggleMenu}
+              className='inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'
             >
-              Cerrar Sesión
-            </Link>
-          </li>
-        </ul>
+              <span className='sr-only'>Open main menu</span>
+              {isOpen ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
+        </div>
       </div>
+
+      {isOpen && (
+        <div className='md:hidden'>
+          <div className='space-y-1 px-2 pb-3 pt-2 sm:px-3'>
+            <NavLink href='/patient' mobile>
+              Paciente
+            </NavLink>
+            <NavLink href='/filter' mobile>
+              Filtro
+            </NavLink>
+            <NavLink href='/washing' mobile>
+              Lavado
+            </NavLink>
+            <NavLink href='/api/auth/logout' mobile>
+              Cerrar Sesión
+            </NavLink>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
+
+const NavLink: React.FC<{
+  href: string;
+  children: React.ReactNode;
+  mobile?: boolean;
+}> = ({ href, children, mobile }) => (
+  <Link
+    href={href}
+    className={`${
+      mobile
+        ? 'block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white'
+        : 'rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white'
+    }`}
+  >
+    {children}
+  </Link>
+);
 
 export default Navbar;
