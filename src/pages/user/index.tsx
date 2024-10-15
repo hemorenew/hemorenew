@@ -2,6 +2,12 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
+export const professions = [
+  'Médico General',
+  'Médico Nefrologista',
+  'Lic. Enfermero',
+];
+
 interface User {
   _id: string;
   firstName: string;
@@ -102,51 +108,57 @@ const UserCRUD: React.FC = () => {
     <div className='h-full min-h-max bg-gray-100 py-8'>
       <div className='container mx-auto px-4'>
         <h1 className='mb-8 text-2xl font-bold text-gray-800'>
-          User Management
+          Gestión de Usuarios
         </h1>
 
         <div className='grid gap-8 lg:grid-cols-3'>
           <div className='col-span-1 rounded-lg bg-white p-6 shadow-md'>
             <h2 className='mb-4 text-lg font-semibold'>
-              {editingUser ? 'Edit User' : 'Add New User'}
+              {editingUser ? 'Editar Usuario' : 'Agregar Nuevo Usuario'}
             </h2>
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
               <input
                 {...register('firstName')}
-                placeholder='First Name'
+                placeholder='Nombre'
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
               <input
                 {...register('lastName')}
-                placeholder='Last Name'
+                placeholder='Apellido'
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
               <input
                 {...register('ci')}
-                placeholder='CI'
+                placeholder='Cédula de Identidad'
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
-              <input
+              <select
                 {...register('profession')}
-                placeholder='Profession'
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-              />
+              >
+                <option value=''>Seleccione una profesión</option>
+                {professions.map((profession) => (
+                  <option key={profession} value={profession}>
+                    {profession}
+                  </option>
+                ))}
+              </select>
               <input
                 {...register('phone')}
-                placeholder='Phone'
+                placeholder='Teléfono'
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
               <input
                 {...register('password')}
                 type={showPassword ? 'text' : 'password'}
-                placeholder='Password'
+                placeholder='Contraseña'
                 value={password}
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
               <input
                 {...register('confirmPassword')}
                 type={showPassword ? 'text' : 'password'}
-                placeholder='Confirm Password'
+                placeholder='Confirmar Contraseña'
                 value={confirmPassword}
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
@@ -158,27 +170,27 @@ const UserCRUD: React.FC = () => {
                   onChange={() => setShowPassword(!showPassword)}
                   className='mr-2'
                 />
-                <label htmlFor='showPassword'>Show password</label>
+                <label htmlFor='showPassword'>Mostrar contraseña</label>
               </div>
               <button
                 type='submit'
                 className='w-full rounded-md bg-blue-500 py-2 px-4 text-white transition duration-300 hover:bg-blue-600'
               >
-                {editingUser ? 'Update User' : 'Add User'}
+                {editingUser ? 'Actualizar Usuario' : 'Agregar Usuario'}
               </button>
             </form>
           </div>
 
           <div className='col-span-2 overflow-x-auto rounded-lg bg-white p-6 shadow-md'>
-            <h2 className='mb-4 text-lg font-semibold'>User List</h2>
+            <h2 className='mb-4 text-lg font-semibold'>Lista de Usuarios</h2>
             <table className='w-full'>
               <thead>
                 <tr className='bg-gray-100'>
-                  <th className='px-4 py-2 text-left'>Name</th>
+                  <th className='px-4 py-2 text-left'>Nombre</th>
                   <th className='px-4 py-2 text-left'>CI</th>
-                  <th className='px-4 py-2 text-left'>Profession</th>
-                  <th className='px-4 py-2 text-left'>Username</th>
-                  <th className='px-4 py-2 text-left'>Actions</th>
+                  <th className='px-4 py-2 text-left'>Profesión</th>
+                  <th className='px-4 py-2 text-left'>Usuario</th>
+                  <th className='px-4 py-2 text-left'>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -193,13 +205,13 @@ const UserCRUD: React.FC = () => {
                         onClick={() => editUser(user)}
                         className='mr-2 rounded-md bg-yellow-500 px-2 py-1 text-white transition duration-300 hover:bg-yellow-600'
                       >
-                        Edit
+                        Editar
                       </button>
                       <button
                         onClick={() => deleteUser(user._id)}
                         className='rounded-md bg-red-500 px-2 py-1 text-white transition duration-300 hover:bg-red-600'
                       >
-                        Delete
+                        Eliminar
                       </button>
                     </td>
                   </tr>

@@ -29,6 +29,16 @@ const Navbar: React.FC = () => {
               Lavado
             </Link>
           </li>
+          <li>
+            <Link href='/login' className='text-white hover:text-gray-300'>
+              Login
+            </Link>
+          </li>
+          <li>
+            <Link href='/register' className='text-white hover:text-gray-300'>
+              Register
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
