@@ -31,8 +31,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         if (error.code === 11000) {
           const field = Object.keys(error.keyValue)[0];
           const value = error.keyValue[field];
-          const errorMessage = `El valor '${value}' ya existe para el campo '${field}'. Debe ser único.`;
-          return res.status(400).json({ error: errorMessage });
+          let fieldName = field;
+          if (field === 'ci') fieldName = 'Cédula de Identidad';
+          if (field === 'phone') fieldName = 'Teléfono';
+          if (field === 'user') fieldName = 'Correo Electrónico';
+          const errorMessage = `El ${fieldName} '${value}' ya está registrado.`;
+          return res.status(400).json({ error: errorMessage, field });
         }
 
         return res.status(400).json({ error: error.message });

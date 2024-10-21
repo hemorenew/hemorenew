@@ -6,13 +6,11 @@ const UserSchema = new Schema(
       type: String,
       trim: true,
       maxlength: [150, 'Name cannot be more than 150 characters'],
-      unique: true,
     },
     lastName: {
       type: String,
       trim: true,
       maxlength: [150, 'Name cannot be more than 150 characters'],
-      unique: true,
     },
     ci: {
       type: String,
