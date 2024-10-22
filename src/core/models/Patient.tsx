@@ -11,7 +11,6 @@ const PatientSchema = new Schema(
       type: String,
       trim: true,
       maxlength: [100, 'Name cannot be more than 100 characters'],
-      unique: false,
     },
     ci: {
       type: String,
@@ -23,7 +22,6 @@ const PatientSchema = new Schema(
       type: String,
       trim: true,
       maxlength: [20, 'Plate cannot be more than 20 characters'],
-      unique: false,
     },
     phone: {
       type: String,

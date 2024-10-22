@@ -37,6 +37,7 @@ const Navbar: React.FC = () => {
           </div>
           <div className='hidden md:block'>
             <div className='ml-10 flex items-baseline space-x-4'>
+              <NavLink href='/history'>Historial</NavLink>
               <NavLink href='/patient'>Paciente</NavLink>
               <NavLink href='/filter'>Filtro</NavLink>
               <NavLink href='/washing'>Lavado</NavLink>
@@ -60,6 +61,9 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className='md:hidden'>
           <div className='space-y-1 px-2 pb-3 pt-2 sm:px-3'>
+            <NavLink href='/history' mobile>
+              Historial
+            </NavLink>
             <NavLink href='/patient' mobile>
               Paciente
             </NavLink>

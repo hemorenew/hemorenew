@@ -20,8 +20,10 @@ const WashingCRUD: React.FC = () => {
   const [editingWashing, setEditingWashing] = useState<Washing | null>(null);
   const [patients, setPatients] = useState<any[]>([]);
   const [filters, setFilters] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredWashings, setFilteredWashings] = useState<Washing[]>([]);
 
-  const { register, handleSubmit, reset, setValue } = useForm<Washing>();
+  const { register, handleSubmit, reset } = useForm<Washing>();
 
   useEffect(() => {
     axios
@@ -34,6 +36,26 @@ const WashingCRUD: React.FC = () => {
     fetchPatients();
     fetchFilters();
   }, []);
+
+  useEffect(() => {
+    const filtered = washings.filter(
+      (washing) =>
+        washing.patient.firstName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        washing.patient.lastName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      // ||
+      // washing.attended.firstName
+      //   .toLowerCase()
+      //   .includes(searchTerm.toLowerCase()) ||
+      // washing.attended.lastName
+      //   .toLowerCase()
+      //   .includes(searchTerm.toLowerCase())
+    );
+    setFilteredWashings(filtered);
+  }, [searchTerm, washings]);
 
   const fetchWashings = async () => {
     try {
@@ -84,30 +106,6 @@ const WashingCRUD: React.FC = () => {
     }
   };
 
-  const deleteWashing = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this washing?')) {
-      try {
-        await axios.delete(`/api/v1/washings/${id}`);
-        fetchWashings();
-      } catch (error) {
-        console.error('Error deleting washing:', error);
-      }
-    }
-  };
-
-  const editWashing = (washing: Washing) => {
-    setEditingWashing(washing);
-    setValue('patient', washing.patient._id);
-    setValue('filter', washing.filter._id);
-    setValue('startDate', formatDateForInput(washing.startDate));
-    setValue('status', washing.status);
-  };
-
-  const formatDateForInput = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toISOString().slice(0, 16);
-  };
-
   const formatDateForDisplay = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString();
@@ -121,7 +119,7 @@ const WashingCRUD: React.FC = () => {
         </h1>
 
         <div className='grid gap-8 lg:grid-cols-3'>
-          <div className='col-span-1 rounded-lg bg-white p-6 shadow-md'>
+          <div className='col-span-1 h-fit rounded-lg bg-white p-6 shadow-md'>
             <h2 className='mb-4 text-lg font-semibold'>
               {editingWashing ? 'Editar Lavado' : 'Agregar Nuevo Lavado'}
             </h2>
@@ -178,6 +176,15 @@ const WashingCRUD: React.FC = () => {
 
           <div className='col-span-2 overflow-x-auto rounded-lg bg-white p-6 shadow-md'>
             <h2 className='mb-4 text-lg font-semibold'>Lista de Lavados</h2>
+            <div className='mb-4'>
+              <input
+                type='text'
+                placeholder='Buscar...'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+            </div>
             <table className='w-full'>
               <thead>
                 <tr className='bg-gray-100'>
@@ -185,11 +192,10 @@ const WashingCRUD: React.FC = () => {
                   <th className='px-4 py-2 text-left'>Filtro</th>
                   <th className='px-4 py-2 text-left'>Atendido por</th>
                   <th className='px-4 py-2 text-left'>Fecha de Inicio</th>
-                  <th className='px-4 py-2 text-left'>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {washings.map((washing) => (
+                {filteredWashings.map((washing) => (
                   <tr key={washing._id} className='border-b'>
                     <td className='px-4 py-2'>
                       {washing.patient.firstName} {washing.patient.lastName}
@@ -202,20 +208,6 @@ const WashingCRUD: React.FC = () => {
                     </td>
                     <td className='px-4 py-2'>
                       {formatDateForDisplay(washing.startDate)}
-                    </td>
-                    <td className='px-4 py-2'>
-                      <button
-                        onClick={() => editWashing(washing)}
-                        className='mr-2 rounded-md bg-yellow-500 px-2 py-1 text-white transition duration-300 hover:bg-yellow-600'
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => deleteWashing(washing._id)}
-                        className='rounded-md bg-red-500 px-2 py-1 text-white transition duration-300 hover:bg-red-600'
-                      >
-                        Eliminar
-                      </button>
                     </td>
                   </tr>
                 ))}

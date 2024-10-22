@@ -21,8 +21,16 @@ const PatientCRUD: React.FC = () => {
   const [userId, setUserId] = useState<string>('');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
 
-  const { register, handleSubmit, reset, setValue } = useForm<Patient>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<Patient>();
 
   useEffect(() => {
     fetchPatients();
@@ -32,8 +40,9 @@ const PatientCRUD: React.FC = () => {
     try {
       const response = await axios.get('/api/v1/patients');
       setPatients(response.data);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
+    } catch (error: any) {
+      console.error('Error fetching patients:', error.errorMessage);
+      alert(error.errorMessage);
     }
   };
 
@@ -48,8 +57,9 @@ const PatientCRUD: React.FC = () => {
       fetchPatients();
       reset();
       setEditingPatient(null);
-    } catch (error) {
-      console.error('Error saving patient:', error);
+    } catch (error: any) {
+      console.error('Error saving patient:', error.errorMessage);
+      alert(error.errorMessage);
     }
   };
 
@@ -58,8 +68,9 @@ const PatientCRUD: React.FC = () => {
       try {
         await axios.delete(`/api/v1/patients/${id}`);
         fetchPatients();
-      } catch (error) {
-        console.error('Error deleting patient:', error);
+      } catch (error: any) {
+        console.error('Error deleting patient:', error.errorMessage);
+        alert(error.errorMessage);
       }
     }
   };
@@ -81,8 +92,18 @@ const PatientCRUD: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const filtered = patients.filter(
+      (patient) =>
+        patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.ci.includes(searchTerm)
+    );
+    setFilteredPatients(filtered);
+  }, [searchTerm, patients]);
+
   return (
-    <div className='flex flex min-h-[84vh] flex-col items-center justify-center bg-gray-100 py-8'>
+    <div className='flex min-h-[84vh] flex-col items-center justify-center bg-gray-100 py-8'>
       <div className='container mx-auto px-4'>
         <h1 className='mb-8 text-2xl font-bold text-gray-800 sm:text-3xl'>
           Gestión de Pacientes
@@ -95,39 +116,124 @@ const PatientCRUD: React.FC = () => {
                 {editingPatient ? 'Editar Paciente' : 'Agregar Nuevo Paciente'}
               </h2>
               <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+                <div>
+                  <input
+                    {...register('firstName', {
+                      required: 'Este campo es requerido',
+                      pattern: {
+                        value: /^[a-zA-Z\s]+$/,
+                        message: 'Solo se permiten letras y espacios',
+                      },
+                    })}
+                    placeholder='Nombre'
+                    className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                  {errors.firstName && (
+                    <p className='mt-1 text-sm text-red-500'>
+                      {errors.firstName.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    {...register('lastName', {
+                      required: 'Este campo es requerido',
+                      pattern: {
+                        value: /^[a-zA-Z\s]+$/,
+                        message: 'Solo se permiten letras y espacios',
+                      },
+                    })}
+                    placeholder='Apellido'
+                    className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                  {errors.lastName && (
+                    <p className='mt-1 text-sm text-red-500'>
+                      {errors.lastName.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    {...register('ci', {
+                      required: 'Este campo es requerido',
+                      pattern: {
+                        value: /^[0-9]+$/,
+                        message: 'Solo se permiten números',
+                      },
+                    })}
+                    type='number'
+                    placeholder='Cédula de Identidad'
+                    className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                  {errors.ci && (
+                    <p className='mt-1 text-sm text-red-500'>
+                      {errors.ci.message}
+                    </p>
+                  )}
+                </div>
                 <input
-                  {...register('firstName')}
-                  placeholder='Nombre'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                <input
-                  {...register('lastName')}
-                  placeholder='Apellido'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                <input
-                  {...register('ci')}
-                  placeholder='Cédula de Identidad'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                <input
-                  {...register('birthDate')}
+                  {...register('birthDate', {
+                    required: 'Este campo es requerido',
+                    validate: (value) => {
+                      const date = new Date(value);
+                      const minDate = new Date('1930-01-01');
+                      const today = new Date();
+                      return (
+                        (date >= minDate && date <= today) || 'Fecha inválida'
+                      );
+                    },
+                  })}
                   type='date'
+                  min='1930-01-01'
+                  max={new Date().toISOString().split('T')[0]}
                   placeholder='Fecha de Nacimiento'
                   className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
-                <input
-                  {...register('phone')}
-                  placeholder='Teléfono'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                <input
-                  {...register('dryWeight', { valueAsNumber: true })}
-                  type='number'
-                  step='0.1'
-                  placeholder='Peso Seco'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
+                {errors.birthDate && (
+                  <p className='mt-1 text-sm text-red-500'>
+                    {errors.birthDate.message}
+                  </p>
+                )}
+                <div>
+                  <input
+                    {...register('phone', {
+                      required: 'Este campo es requerido',
+                      pattern: {
+                        value: /^[0-9]+$/,
+                        message: 'Solo se permiten números',
+                      },
+                    })}
+                    type='number'
+                    placeholder='Teléfono'
+                    className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                  {errors.phone && (
+                    <p className='mt-1 text-sm text-red-500'>
+                      {errors.phone.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    {...register('dryWeight', {
+                      valueAsNumber: true,
+                      required: 'Este campo es requerido',
+                      min: {
+                        value: 0,
+                        message: 'El peso seco debe ser mayor que 0',
+                      },
+                    })}
+                    type='number'
+                    step='0.1'
+                    placeholder='Peso Seco'
+                    className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                  {errors.dryWeight && (
+                    <p className='mt-1 text-sm text-red-500'>
+                      {errors.dryWeight.message}
+                    </p>
+                  )}
+                </div>
 
                 <button
                   type='submit'
@@ -144,6 +250,15 @@ const PatientCRUD: React.FC = () => {
               <h2 className='mb-4 text-lg font-semibold sm:text-xl'>
                 Lista de Pacientes
               </h2>
+              <div className='mb-4'>
+                <input
+                  type='text'
+                  placeholder='Buscar paciente...'
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                />
+              </div>
               <div className='overflow-x-auto'>
                 <table className='w-full table-auto'>
                   <thead>
@@ -166,7 +281,7 @@ const PatientCRUD: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {patients.map((patient) => (
+                    {filteredPatients.map((patient) => (
                       <tr key={patient._id} className='border-b'>
                         <td className='px-4 py-2'>{`${patient.firstName} ${patient.lastName}`}</td>
                         <td className='px-4 py-2'>{patient.ci}</td>

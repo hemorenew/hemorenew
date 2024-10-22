@@ -9,25 +9,42 @@ import { NextApiRequest, NextApiResponse } from 'next';
 dbConnect();
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { method, body } = req;
+  const { method, body, query } = req;
 
   switch (method) {
     case 'GET':
       try {
-        const allWashings = await Washing.find({})
-          .populate({
-            path: 'patient',
-            model: Patient,
-          })
-          .populate({
-            path: 'filter',
-            model: Filter,
-          })
-          .populate({
-            path: 'attended',
-            model: User,
-          });
-        return res.status(200).json(allWashings);
+        let washings;
+        if (query.patient) {
+          washings = await Washing.find({ patient: query.patient })
+            .populate({
+              path: 'patient',
+              model: Patient,
+            })
+            .populate({
+              path: 'filter',
+              model: Filter,
+            })
+            .populate({
+              path: 'attended',
+              model: User,
+            });
+        } else {
+          washings = await Washing.find({})
+            .populate({
+              path: 'patient',
+              model: Patient,
+            })
+            .populate({
+              path: 'filter',
+              model: Filter,
+            })
+            .populate({
+              path: 'attended',
+              model: User,
+            });
+        }
+        return res.status(200).json(washings);
       } catch (error: any) {
         return res.status(400).json({ error: error.message });
       }

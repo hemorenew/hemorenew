@@ -10,16 +10,20 @@ const Login = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const response = await axios.post('/api/auth/auth', { user, password });
       if (response.data.id) {
         router.push('/');
       }
     } catch (err) {
-      setError('Invalid username or password');
+      setError('Usuario o contraseña incorrectos');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -67,8 +71,11 @@ const Login = () => {
             </button>
           </div>
           <div className='flex items-center justify-between'>
-            <button className='rounded-lg bg-blue-600 px-6 py-2 text-white transition duration-300 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'>
-              Iniciar Sesión
+            <button
+              className='rounded-lg bg-blue-600 px-6 py-2 text-white transition duration-300 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50'
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </button>
             <Link
               href='/register'
