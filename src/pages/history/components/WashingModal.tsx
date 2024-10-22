@@ -96,7 +96,7 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
     labels,
     datasets: [
       {
-        label: 'RPM',
+        label: 'Sensor de flujo',
         data: generateLineData(600, 200, 20),
         borderColor: 'rgb(153, 102, 255)',
         backgroundColor: 'rgba(153, 102, 255, 0.5)',
@@ -202,7 +202,7 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
             options={doughnutOptions}
           />
           <ChartCard
-            title='RPM'
+            title='Sensor de flujo'
             type='line'
             data={rpmData}
             options={lineOptions}

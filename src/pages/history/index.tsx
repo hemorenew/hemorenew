@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { useServerSideLogin } from 'core/hooks/permission/useServerSideLogin';
 import withSession from 'core/lib/session';
@@ -12,7 +13,11 @@ interface Patient {
 
 interface Washing {
   _id: string;
-  patient: string;
+  patient: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
   filter: {
     brand: string;
     model: string;
@@ -25,43 +30,24 @@ interface Washing {
 }
 
 const HistoryPage: React.FC = () => {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
-  const [washings, setWashings] = useState<Washing[]>([]);
+  const [allWashings, setAllWashings] = useState<Washing[]>([]);
+  const [patientWashings, setPatientWashings] = useState<Washing[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [searchTerm] = useState('');
-  const [, setFilteredWashings] = useState<Washing[]>([]);
   const [patientSearchTerm, setPatientSearchTerm] = useState('');
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWashing, setSelectedWashing] = useState<Washing | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
-    fetchPatients();
+    fetchAllWashings();
   }, []);
 
   useEffect(() => {
-    if (selectedPatient) {
-      fetchWashings(selectedPatient);
-    }
-  }, [selectedPatient]);
-
-  useEffect(() => {
-    const filtered = washings.filter(
-      (washing) =>
-        patients
-          .find((p) => p._id === washing.patient)
-          ?.firstName.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        patients
-          .find((p) => p._id === washing.patient)
-          ?.lastName.toLowerCase()
-          .includes(searchTerm.toLowerCase())
-    );
-    setFilteredWashings(filtered);
-  }, [searchTerm, washings, patients]);
-
-  useEffect(() => {
+    const patients = extractPatientsFromWashings(allWashings);
     const filtered = patients.filter(
       (patient) =>
         patient.firstName
@@ -70,25 +56,13 @@ const HistoryPage: React.FC = () => {
         patient.lastName.toLowerCase().includes(patientSearchTerm.toLowerCase())
     );
     setFilteredPatients(filtered);
-  }, [patientSearchTerm, patients]);
+  }, [patientSearchTerm, allWashings]);
 
-  const fetchPatients = async () => {
+  const fetchAllWashings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/v1/patients');
-      setPatients(response.data);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchWashings = async (patientId: string) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`/api/v1/washings?patient=${patientId}`);
-      setWashings(response.data);
+      const response = await axios.get('/api/v1/washings');
+      setAllWashings(response.data);
     } catch (error) {
       console.error('Error fetching washings:', error);
     } finally {
@@ -96,8 +70,36 @@ const HistoryPage: React.FC = () => {
     }
   };
 
-  const handlePatientClick = (patientId: string) => {
-    setSelectedPatient(patientId);
+  const extractPatientsFromWashings = (washings: Washing[]): Patient[] => {
+    const patientMap = new Map<string, Patient>();
+    washings.forEach((washing) => {
+      if (!patientMap.has(washing.patient._id)) {
+        patientMap.set(washing.patient._id, {
+          _id: washing.patient._id,
+          firstName: washing.patient.firstName,
+          lastName: washing.patient.lastName,
+        });
+      }
+    });
+    return Array.from(patientMap.values());
+  };
+
+  const handlePatientClick = async (patientId: string) => {
+    try {
+      setLoading(true);
+      setSelectedPatientId(patientId);
+      const response = await axios.get(
+        `/api/v1/washings?patientId=${patientId}`
+      );
+      setPatientWashings(response.data);
+      setSelectedPatient(
+        filteredPatients.find((p) => p._id === patientId) || null
+      );
+    } catch (error) {
+      console.error('Error fetching patient washings:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -137,7 +139,7 @@ const HistoryPage: React.FC = () => {
                 <li
                   key={patient._id}
                   className={`cursor-pointer rounded-md p-3 transition-colors duration-200 ${
-                    selectedPatient === patient._id
+                    selectedPatientId === patient._id
                       ? 'bg-blue-100 text-blue-800'
                       : 'hover:bg-gray-100'
                   }`}
@@ -162,13 +164,14 @@ const HistoryPage: React.FC = () => {
             ) : selectedPatient ? (
               <>
                 <p className='mb-4 text-gray-600'>
-                  Total de lavados: {washings.length}
+                  Total de lavados para {selectedPatient.firstName}{' '}
+                  {selectedPatient.lastName}: {patientWashings.length}
                 </p>
                 <ul className='max-h-96 space-y-4 overflow-y-auto'>
-                  {washings.map((washing) => (
+                  {patientWashings.map((washing) => (
                     <li
                       key={washing._id}
-                      className='cursor-pointer rounded-lg bg-gray-100 p-4 shadow-sm hover:bg-gray-200'
+                      className=' rounded-lg bg-gray-100 p-4 shadow-sm hover:cursor-pointer hover:bg-gray-200'
                       onClick={() => handleWashingClick(washing)}
                     >
                       <p className='text-gray-800'>

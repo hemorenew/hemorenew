@@ -15,8 +15,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     case 'GET':
       try {
         let washings;
-        if (query.patientId) {
-          washings = await Washing.find({ patient: query.patientId })
+        if (query.patient) {
+          washings = await Washing.find({ patient: query.patient })
             .populate({
               path: 'patient',
               model: Patient,

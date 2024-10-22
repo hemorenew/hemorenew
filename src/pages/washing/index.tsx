@@ -101,6 +101,7 @@ const WashingCRUD: React.FC = () => {
       fetchWashings();
       reset();
       setEditingWashing(null);
+      alert('Lavado registrado ');
     } catch (error) {
       console.error('Error saving washing:', error);
     }
