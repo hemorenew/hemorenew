@@ -9,6 +9,7 @@ export const professions = [
   'Médico General',
   'Médico Nefrologista',
   'Lic. Enfermero',
+  'Técnico',
 ];
 
 interface RegisterUser {

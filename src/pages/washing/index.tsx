@@ -46,13 +46,6 @@ const WashingCRUD: React.FC = () => {
         washing.patient.lastName
           .toLowerCase()
           .includes(searchTerm.toLowerCase())
-      // ||
-      // washing.attended.firstName
-      //   .toLowerCase()
-      //   .includes(searchTerm.toLowerCase()) ||
-      // washing.attended.lastName
-      //   .toLowerCase()
-      //   .includes(searchTerm.toLowerCase())
     );
     setFilteredWashings(filtered);
   }, [searchTerm, washings]);

@@ -113,9 +113,14 @@ const PatientCRUD: React.FC = () => {
           <div className='min-w-[300px] sm:w-auto lg:col-span-1'>
             <div className='rounded-lg bg-white p-4 shadow-md'>
               <h2 className='mb-4 text-lg font-semibold sm:text-xl'>
-                {editingPatient ? 'Editar Paciente' : 'Agregar Nuevo Paciente'}
+                {editingPatient
+                  ? 'Editar el ingreso al servicio de un paciente'
+                  : 'Agregar el ingreso al servicio de un nuevo paciente'}
               </h2>
-              <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className='flex flex-col gap-4'
+              >
                 <div>
                   <input
                     {...register('firstName', {
@@ -171,29 +176,34 @@ const PatientCRUD: React.FC = () => {
                     </p>
                   )}
                 </div>
-                <input
-                  {...register('birthDate', {
-                    required: 'Este campo es requerido',
-                    validate: (value) => {
-                      const date = new Date(value);
-                      const minDate = new Date('1930-01-01');
-                      const today = new Date();
-                      return (
-                        (date >= minDate && date <= today) || 'Fecha inválida'
-                      );
-                    },
-                  })}
-                  type='date'
-                  min='1930-01-01'
-                  max={new Date().toISOString().split('T')[0]}
-                  placeholder='Fecha de Nacimiento'
-                  className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                />
-                {errors.birthDate && (
-                  <p className='mt-1 text-sm text-red-500'>
-                    {errors.birthDate.message}
-                  </p>
-                )}
+                <div className='flex flex-col gap-2'>
+                  <label className='text-sm text-gray-600' htmlFor='birthDate'>
+                    Fecha de Nacimiento
+                  </label>
+                  <input
+                    {...register('birthDate', {
+                      required: 'Este campo es requerido',
+                      validate: (value) => {
+                        const date = new Date(value);
+                        const minDate = new Date('1930-01-01');
+                        const today = new Date();
+                        return (
+                          (date >= minDate && date <= today) || 'Fecha inválida'
+                        );
+                      },
+                    })}
+                    type='date'
+                    min='1930-01-01'
+                    max={new Date().toISOString().split('T')[0]}
+                    placeholder='Fecha de Nacimiento'
+                    className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  />
+                  {errors.birthDate && (
+                    <p className='mt-1 text-sm text-red-500'>
+                      {errors.birthDate.message}
+                    </p>
+                  )}
+                </div>
                 <div>
                   <input
                     {...register('phone', {
@@ -248,7 +258,7 @@ const PatientCRUD: React.FC = () => {
           <div className='min-w-[300px] sm:w-auto lg:col-span-2'>
             <div className='overflow-x-auto rounded-lg bg-white p-6 shadow-md'>
               <h2 className='mb-4 text-lg font-semibold sm:text-xl'>
-                Lista de Pacientes
+                Lista de pacientes Registrados
               </h2>
               <div className='mb-4'>
                 <input
@@ -260,11 +270,13 @@ const PatientCRUD: React.FC = () => {
                 />
               </div>
               <div className='overflow-x-auto'>
-                <table className='w-full table-auto'>
+                <table className='w-full table-auto text-sm'>
                   <thead>
                     <tr className='bg-gray-100'>
                       <th className='px-4 py-2 text-left'>Nombre</th>
-                      <th className='px-4 py-2 text-left'>CI</th>
+                      <th className='px-4 py-2 text-left'>
+                        Cédula de Identidad
+                      </th>
                       <th className='hidden px-4 py-2 text-left sm:table-cell'>
                         Fecha de Nacimiento
                       </th>
@@ -298,7 +310,7 @@ const PatientCRUD: React.FC = () => {
                           {patient.attended.firstName}{' '}
                           {patient.attended.lastName}
                         </td>
-                        <td className='px-4 py-2'>
+                        <td className='flex flex-wrap items-center justify-center gap-1'>
                           <button
                             onClick={() => editPatient(patient)}
                             className='mb-2 mr-2 rounded-md bg-yellow-500 px-2 py-1 text-white transition duration-300 hover:bg-yellow-600 sm:mb-0'

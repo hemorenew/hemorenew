@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Filter from 'core/models/Filter';
+import Patient from 'core/models/Patient';
 import { dbConnect } from 'core/utils/mongosee';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -14,7 +15,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (method) {
     case 'GET':
       try {
-        const filter = await Filter.findById(id);
+        const filter = await Filter.findById(id).populate({
+          path: 'patient',
+          model: Patient,
+        });
         if (!filter) {
           return res.status(404).end(`Filter not found`);
         }

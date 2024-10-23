@@ -44,7 +44,7 @@ export default withSession(
 
 async function saveSession(user: any, request: any) {
   const { id, firstName, lastName, profession } = user;
-  const sessionDuration = 2 * 60 * 60 * 1000; // 4 hours
+  const sessionDuration = 4 * 60 * 60 * 1000; // 4 hours
   const sessionExpiry = Date.now() + sessionDuration;
   request.session.set('user', {
     id,

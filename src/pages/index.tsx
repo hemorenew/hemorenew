@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 
 const Index = () => {
   const [user, setUser] = useState<any>('');
-  console.log('🚀 ~ Index ~ user:', user);
 
   useEffect(() => {
     axios
@@ -23,9 +22,14 @@ const Index = () => {
         Bienvenido a HemoRenew
       </h1>
       {user && (
-        <p className='text-center text-xl text-gray-600 sm:text-2xl md:text-3xl'>
-          {user.firstName || ''} {user.lastName || ''}
-        </p>
+        <>
+          <p className='text-center text-xl font-bold text-gray-600 sm:text-2xl md:text-3xl'>
+            {user.profession || ''}
+          </p>
+          <p className='text-center text-xl text-gray-600 sm:text-2xl md:text-3xl'>
+            {user.firstName || ''} {user.lastName || ''}
+          </p>
+        </>
       )}
     </div>
   );
