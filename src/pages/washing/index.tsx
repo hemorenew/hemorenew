@@ -45,7 +45,8 @@ const WashingCRUD: React.FC = () => {
           .includes(searchTerm.toLowerCase()) ||
         washing.patient.lastName
           .toLowerCase()
-          .includes(searchTerm.toLowerCase())
+          .includes(searchTerm.toLowerCase()) ||
+        washing.patient.ci.toString().includes(searchTerm)
     );
     setFilteredWashings(filtered);
   }, [searchTerm, washings]);
@@ -62,7 +63,9 @@ const WashingCRUD: React.FC = () => {
 
   const fetchPatients = async () => {
     try {
-      const response = await axios.get('/api/v1/patients');
+      const response = await axios.get(
+        '/api/v1/patients/getPatientFilterActive'
+      );
       setPatients(response.data);
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -72,14 +75,29 @@ const WashingCRUD: React.FC = () => {
   const fetchFilters = async () => {
     try {
       const response = await axios.get('/api/v1/filters');
-      setFilters(response.data);
+      const filtersData = response.data.filters || [];
+      setFilters(Array.isArray(filtersData) ? filtersData : []);
     } catch (error) {
       console.error('Error fetching filters:', error);
     }
   };
 
+  const fetchPatientFilters = async (patientId: string) => {
+    try {
+      const response = await axios.get(
+        `/api/v1/filters/filterByPatient?id=${patientId}`
+      );
+      const filtersData = response.data.filters || [];
+      setFilters(Array.isArray(filtersData) ? filtersData : []);
+    } catch (error) {
+      console.error('Error fetching patient filters:', error);
+      setFilters([]);
+    }
+  };
+
   const onSubmit = async (data: Washing) => {
     data.attended = userId;
+
     try {
       if (editingWashing) {
         const updatedData = {
@@ -94,7 +112,6 @@ const WashingCRUD: React.FC = () => {
       fetchWashings();
       reset();
       setEditingWashing(null);
-      alert('Lavado registrado ');
     } catch (error) {
       console.error('Error saving washing:', error);
     }
@@ -120,6 +137,14 @@ const WashingCRUD: React.FC = () => {
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
               <select
                 {...register('patient')}
+                onChange={(e) => {
+                  register('patient').onChange(e);
+                  if (e.target.value) {
+                    fetchPatientFilters(e.target.value);
+                  } else {
+                    setFilters([]);
+                  }
+                }}
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               >
                 <option value=''>Seleccionar Paciente</option>

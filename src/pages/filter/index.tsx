@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { useServerSideLogin } from 'core/hooks/permission/useServerSideLogin';
 import withSession from 'core/lib/session';
@@ -6,7 +7,12 @@ import { useForm } from 'react-hook-form';
 
 interface Filter {
   _id: string;
-  patient: string;
+  patient: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    ci: string;
+  };
   brand: string;
   model: string;
   primingReal: number;
@@ -36,6 +42,10 @@ const FilterCRUD: React.FC = () => {
   const [selectedBrand, setSelectedBrand] = useState<string>('');
   const [models, setModels] = useState<string[]>([]);
   const [editingFilter, setEditingFilter] = useState<Filter | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [formData, setFormData] = useState<Filter | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredFilters, setFilteredFilters] = useState<Filter[]>([]);
 
   const { register, handleSubmit, reset, setValue } = useForm<Filter>();
   const today = new Date().toISOString().split('T')[0];
@@ -68,18 +78,25 @@ const FilterCRUD: React.FC = () => {
   };
 
   const onSubmit = async (data: Filter) => {
+    setFormData(data);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirm = async () => {
+    if (!formData) return;
+
     try {
       if (editingFilter) {
-        await axios.put(`/api/v1/filters/${editingFilter._id}`, data);
+        await axios.put(`/api/v1/filters/${editingFilter._id}`, formData);
       } else {
-        console.log('Data to be sent:', data);
-        await axios.post('/api/v1/filters', data);
+        await axios.post('/api/v1/filters', formData);
       }
       await fetchFilters();
       setSelectedBrand('');
       setModels([]);
       reset();
       setEditingFilter(null);
+      setShowConfirmModal(false);
     } catch (error) {
       console.error('Error saving filter:', error);
     }
@@ -122,15 +139,31 @@ const FilterCRUD: React.FC = () => {
     setValue('primingReal', primingValue);
   };
 
+  // Add this useEffect for search filtering
+  useEffect(() => {
+    const filtered = filters.filter((filter) =>
+      filter.patient
+        ? filter.patient.firstName
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          filter.patient.lastName
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          filter.patient.ci.includes(searchTerm)
+        : false
+    );
+    setFilteredFilters(filtered);
+  }, [searchTerm, filters]);
+
   return (
-    <div className='flex h-full  items-center justify-center bg-gray-100 py-8 lg:min-h-[85vh]'>
+    <div className='flex h-full items-center justify-center bg-gray-100 py-8 lg:min-h-[85vh]'>
       <div className='container mx-auto px-4'>
         <h1 className='mb-8 text-2xl font-bold text-gray-800'>
           Gestión de Filtros
         </h1>
 
         <div className='grid gap-8 lg:grid-cols-3'>
-          <div className='col-span-1 rounded-lg bg-white p-6 shadow-md'>
+          <div className='col-span-1 h-fit rounded-lg bg-white p-6 shadow-md'>
             <h2 className='mb-4 text-lg font-semibold'>
               {editingFilter
                 ? 'Editar Filtro'
@@ -178,7 +211,7 @@ const FilterCRUD: React.FC = () => {
               <input
                 {...register('primingReal')}
                 type='number'
-                placeholder='Priming real'
+                placeholder='Priming'
                 readOnly
                 className='w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
@@ -206,13 +239,22 @@ const FilterCRUD: React.FC = () => {
                 type='submit'
                 className='w-full rounded-md bg-blue-500 py-2 px-4 text-white transition duration-300 hover:bg-blue-600'
               >
-                {editingFilter ? 'Actualizar Filtro' : 'Agregar Filtro'}
+                {editingFilter ? 'Actualizar ' : 'Asignar filtro al Paciente'}
               </button>
             </form>
           </div>
 
           <div className='col-span-2 overflow-x-auto rounded-lg bg-white p-6 shadow-md'>
             <h2 className='mb-4 text-lg font-semibold'>Lista de Filtros</h2>
+            <div className='mb-4'>
+              <input
+                type='text'
+                placeholder='Buscar paciente...'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+            </div>
             <table className='w-full'>
               <thead>
                 <tr className='bg-gray-100'>
@@ -220,23 +262,32 @@ const FilterCRUD: React.FC = () => {
                   <th className='px-4 py-2 text-left'>Marca</th>
                   <th className='px-4 py-2 text-left'>Modelo</th>
                   <th className='px-4 py-2 text-left'>Priming</th>
+                  <th className='px-4 py-2 text-left'>Priming real</th>
+                  <th className='px-4 py-2 text-left'>Primer uso</th>
                   <th className='px-4 py-2 text-left'>Estado</th>
                   <th className='px-4 py-2 text-left'>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {Array.isArray(filters) && filters.length > 0 ? (
-                  filters.map((filter) => (
+                {Array.isArray(filteredFilters) &&
+                filteredFilters.length > 0 ? (
+                  filteredFilters.map((filter) => (
                     <tr key={filter._id} className='border-b'>
                       <td className='px-4 py-2'>
-                        {patients.find((p) => p._id === filter.patient)
-                          ?.firstName || 'N/A'}{' '}
-                        {patients.find((p) => p._id === filter.patient)
-                          ?.lastName || ''}
+                        {filter.patient?.firstName || 'N/A'}{' '}
+                        {filter.patient?.lastName || ''}
                       </td>
                       <td className='px-4 py-2'>{filter.brand}</td>
                       <td className='px-4 py-2'>{filter.model}</td>
                       <td className='px-4 py-2'>{filter.primingReal}</td>
+                      <td className='px-4 py-2'>
+                        {(filter.primingReal * 0.8).toFixed(2)}
+                      </td>
+                      <td className='px-4 py-2'>
+                        {filter.firstUse
+                          ? new Date(filter.firstUse).toLocaleDateString()
+                          : 'N/A'}
+                      </td>
                       <td className='px-4 py-2'>
                         {filter.status === 'active' ? 'Activo' : 'Inactivo'}
                       </td>
@@ -258,7 +309,7 @@ const FilterCRUD: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className='px-4 py-2 text-center'>
+                    <td colSpan={8} className='px-4 py-2 text-center'>
                       No hay filtros disponibles
                     </td>
                   </tr>
@@ -268,6 +319,55 @@ const FilterCRUD: React.FC = () => {
           </div>
         </div>
       </div>
+      {showConfirmModal && formData && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
+          <div className='w-full max-w-md rounded-lg bg-white p-6'>
+            <h2 className='mb-4 text-xl font-bold'>
+              Confirmar datos del filtro
+            </h2>
+
+            <div className='space-y-2'>
+              <p>
+                <strong>Paciente:</strong>{' '}
+                {patients.find((p) => p._id === formData.patient)?.firstName}{' '}
+                {patients.find((p) => p._id === formData.patient)?.lastName}
+              </p>
+              <p>
+                <strong>Marca:</strong> {formData.brand}
+              </p>
+              <p>
+                <strong>Modelo:</strong> {formData.model}
+              </p>
+              <p>
+                <strong>Priming:</strong> {formData.primingReal}
+              </p>
+              <p>
+                <strong>Primer uso:</strong>{' '}
+                {new Date(formData.firstUse).toLocaleDateString()}
+              </p>
+              <p>
+                <strong>Estado:</strong>{' '}
+                {formData.status === 'active' ? 'Activo' : 'Inactivo'}
+              </p>
+            </div>
+
+            <div className='mt-6 flex justify-end space-x-4'>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className='rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-600'
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirm}
+                className='rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600'
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

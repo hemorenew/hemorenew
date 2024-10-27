@@ -70,7 +70,7 @@ const Login = () => {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
-          <div className='flex items-center justify-between'>
+          <div className='flex flex-col items-center justify-between md:flex-row'>
             <button
               className='rounded-lg bg-blue-600 px-6 py-2 text-white transition duration-300 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50'
               disabled={isSubmitting}

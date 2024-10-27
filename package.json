@@ -19,6 +19,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.0",
     "@react-google-maps/api": "^2.18.1",
     "aws-sdk": "^2.1381.0",
     "axios": "^0.27.2",
