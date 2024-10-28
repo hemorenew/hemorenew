@@ -22,6 +22,8 @@ const WashingCRUD: React.FC = () => {
   const [filters, setFilters] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredWashings, setFilteredWashings] = useState<Washing[]>([]);
+  const [sortField, setSortField] = useState<keyof Washing | ''>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const { register, handleSubmit, reset } = useForm<Washing>();
 
@@ -122,6 +124,45 @@ const WashingCRUD: React.FC = () => {
     return date.toLocaleString();
   };
 
+  const handleSort = (field: keyof Washing) => {
+    const newDirection =
+      sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortField(field);
+    setSortDirection(newDirection);
+
+    const sorted = [...filteredWashings].sort((a, b) => {
+      let aValue, bValue;
+
+      if (field === 'startDate') {
+        aValue = new Date(a[field]).getTime();
+        bValue = new Date(b[field]).getTime();
+      } else {
+        aValue =
+          field === 'patient'
+            ? a[field].firstName
+            : field === 'filter'
+            ? a[field].brand
+            : field === 'attended'
+            ? a[field].firstName
+            : a[field];
+        bValue =
+          field === 'patient'
+            ? b[field].firstName
+            : field === 'filter'
+            ? b[field].brand
+            : field === 'attended'
+            ? b[field].firstName
+            : b[field];
+      }
+
+      if (aValue < bValue) return newDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return newDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    setFilteredWashings(sorted);
+  };
+
   return (
     <div className='flex h-full  items-center justify-center bg-gray-100 py-8 lg:min-h-[85vh]'>
       <div className='container mx-auto px-4'>
@@ -132,7 +173,9 @@ const WashingCRUD: React.FC = () => {
         <div className='grid gap-8 lg:grid-cols-3'>
           <div className='col-span-1 h-fit rounded-lg bg-white p-6 shadow-md'>
             <h2 className='mb-4 text-lg font-semibold'>
-              {editingWashing ? 'Editar Lavado' : 'Agregar Nuevo Lavado'}
+              {editingWashing
+                ? 'Editar Lavado'
+                : 'Registrar el procesado de un filtro'}
             </h2>
             <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
               <select
@@ -207,10 +250,38 @@ const WashingCRUD: React.FC = () => {
             <table className='w-full'>
               <thead>
                 <tr className='bg-gray-100'>
-                  <th className='px-4 py-2 text-left'>Paciente</th>
-                  <th className='px-4 py-2 text-left'>Filtro</th>
-                  <th className='px-4 py-2 text-left'>Atendido por</th>
-                  <th className='px-4 py-2 text-left'>Fecha de Inicio</th>
+                  <th
+                    className='cursor-pointer px-4 py-2 text-left hover:bg-gray-200'
+                    onClick={() => handleSort('patient')}
+                  >
+                    Paciente{' '}
+                    {sortField === 'patient' &&
+                      (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className='cursor-pointer px-4 py-2 text-left hover:bg-gray-200'
+                    onClick={() => handleSort('filter')}
+                  >
+                    Filtro{' '}
+                    {sortField === 'filter' &&
+                      (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className='cursor-pointer px-4 py-2 text-left hover:bg-gray-200'
+                    onClick={() => handleSort('attended')}
+                  >
+                    Atendido por{' '}
+                    {sortField === 'attended' &&
+                      (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th
+                    className='cursor-pointer px-4 py-2 text-left hover:bg-gray-200'
+                    onClick={() => handleSort('startDate')}
+                  >
+                    Fecha de Inicio{' '}
+                    {sortField === 'startDate' &&
+                      (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
                 </tr>
               </thead>
               <tbody>

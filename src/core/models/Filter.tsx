@@ -30,7 +30,6 @@ const FilterSchema = new Schema(
     status: {
       type: String,
       default: 'active',
-      enum: ['active', 'inactive'],
     },
   },
   {

@@ -9,6 +9,7 @@ interface Patient {
   _id: string;
   firstName: string;
   lastName: string;
+  ci?: string;
 }
 
 interface Washing {
@@ -17,16 +18,29 @@ interface Washing {
     _id: string;
     firstName: string;
     lastName: string;
+    ci: string;
   };
   filter: {
     brand: string;
     model: string;
+    status: string;
+    firstUse: Date;
   };
   startDate: string;
   attended: {
     firstName: string;
     lastName: string;
   };
+}
+
+interface FilterUsage {
+  filter: {
+    brand: string;
+    model: string;
+    firstUse: Date;
+    status: string;
+  };
+  count: number;
 }
 
 const HistoryPage: React.FC = () => {
@@ -41,6 +55,14 @@ const HistoryPage: React.FC = () => {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(
     null
   );
+  const [filterStats, setFilterStats] = useState<FilterUsage[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [groupByFilter, setGroupByFilter] = useState(false);
+
+  // Add new state for filter modal
+  const [selectedFilterStat, setSelectedFilterStat] =
+    useState<FilterUsage | null>(null);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   useEffect(() => {
     fetchAllWashings();
@@ -53,7 +75,11 @@ const HistoryPage: React.FC = () => {
         patient.firstName
           .toLowerCase()
           .includes(patientSearchTerm.toLowerCase()) ||
-        patient.lastName.toLowerCase().includes(patientSearchTerm.toLowerCase())
+        patient.lastName
+          .toLowerCase()
+          .includes(patientSearchTerm.toLowerCase()) ||
+        (patient.ci?.toLowerCase().includes(patientSearchTerm.toLowerCase()) ??
+          false)
     );
     setFilteredPatients(filtered);
   }, [patientSearchTerm, allWashings]);
@@ -78,10 +104,40 @@ const HistoryPage: React.FC = () => {
           _id: washing.patient._id,
           firstName: washing.patient.firstName,
           lastName: washing.patient.lastName,
+          ci: washing.patient.ci,
         });
       }
     });
     return Array.from(patientMap.values());
+  };
+
+  const calculateFilterStats = (washings: Washing[]): FilterUsage[] => {
+    const filterMap = new Map<string, FilterUsage>();
+
+    washings
+      .sort(
+        (a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      )
+      .forEach((washing) => {
+        const key = `${washing.filter.brand}-${washing.filter.model}`;
+        const existing = filterMap.get(key);
+
+        if (existing) {
+          existing.count += 1;
+        } else {
+          filterMap.set(key, {
+            filter: {
+              ...washing.filter,
+              firstUse: new Date(washing.startDate),
+              status: washing.filter.status || 'En uso',
+            },
+            count: 1,
+          });
+        }
+      });
+
+    return Array.from(filterMap.values());
   };
 
   const handlePatientClick = async (patientId: string) => {
@@ -92,6 +148,7 @@ const HistoryPage: React.FC = () => {
         `/api/v1/washings?patientId=${patientId}`
       );
       setPatientWashings(response.data);
+      setFilterStats(calculateFilterStats(response.data));
       setSelectedPatient(
         filteredPatients.find((p) => p._id === patientId) || null
       );
@@ -111,20 +168,57 @@ const HistoryPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const getSortedWashings = () => {
+    const sorted = [...patientWashings];
+
+    if (groupByFilter) {
+      const grouped = sorted.reduce((acc, washing) => {
+        const key = `${washing.filter.brand} - ${washing.filter.model}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(washing);
+        return acc;
+      }, {} as Record<string, Washing[]>);
+
+      // Sort each group internally by date
+      Object.keys(grouped).forEach((key) => {
+        grouped[key].sort((a, b) => {
+          const comparison =
+            new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+          return sortOrder === 'desc' ? comparison : -comparison;
+        });
+      });
+
+      return grouped;
+    } else {
+      // Simple date sort
+      return sorted.sort((a, b) => {
+        const comparison =
+          new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+        return sortOrder === 'desc' ? comparison : -comparison;
+      });
+    }
+  };
+
+  // Add click handler
+  const handleFilterStatClick = (stat: FilterUsage) => {
+    setSelectedFilterStat(stat);
+    setIsFilterModalOpen(true);
+  };
+
   return (
     <div className='flex min-h-[84vh] flex-col items-start justify-center bg-gray-50 p-8'>
       <h1 className='mb-8 text-start text-3xl font-bold text-gray-800'>
         Historial de Pacientes y Filtros
       </h1>
 
-      <div className='grid gap-8 md:grid-cols-2 lg:grid-cols-3 lg:self-center'>
+      <div className='flex flex-col gap-8 lg:flex-row lg:self-center'>
         <div className='h-fit rounded-lg bg-white p-6 shadow-md'>
           <h2 className='mb-4 text-xl font-semibold text-gray-700'>
             Pacientes
           </h2>
           <input
             type='text'
-            placeholder='Buscar paciente...'
+            placeholder='CI, nombre o apellido'
             value={patientSearchTerm}
             onChange={(e) => setPatientSearchTerm(e.target.value)}
             className='mb-4 w-full rounded-md border border-gray-300 p-2'
@@ -152,11 +246,34 @@ const HistoryPage: React.FC = () => {
           )}
         </div>
 
-        <div className='md:col-span-2 lg:col-span-2'>
-          <div className='rounded-lg bg-white p-6 shadow-md'>
-            <h2 className='mb-4 text-xl font-semibold text-gray-700'>
-              Historial de Lavados
-            </h2>
+        <div className='w-fit md:col-span-2'>
+          <div className='w-fit rounded-lg bg-white p-6 shadow-md'>
+            <div className='mb-4 flex items-center justify-between'>
+              <h2 className='text-xl font-semibold text-gray-700'>
+                Historial de Lavados
+              </h2>
+              <div className='flex gap-4'>
+                <button
+                  onClick={() =>
+                    setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'))
+                  }
+                  className='rounded bg-gray-100 px-3 py-1 text-sm hover:bg-gray-200'
+                >
+                  {sortOrder === 'desc' ? '↓ Fecha' : '↑ Fecha'}
+                </button>
+                <button
+                  onClick={() => setGroupByFilter((prev) => !prev)}
+                  className={`rounded px-3 py-1 text-sm ${
+                    groupByFilter
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+                >
+                  Agrupar por filtro
+                </button>
+              </div>
+            </div>
+
             {loading ? (
               <div className='flex h-40 items-center justify-center'>
                 <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900'></div>
@@ -164,32 +281,66 @@ const HistoryPage: React.FC = () => {
             ) : selectedPatient ? (
               <>
                 <p className='mb-4 text-gray-600'>
-                  Total de lavados para {selectedPatient.firstName}{' '}
+                  Total de lavados de {selectedPatient.firstName}{' '}
                   {selectedPatient.lastName}: {patientWashings.length}
                 </p>
                 <ul className='max-h-96 space-y-4 overflow-y-auto'>
-                  {patientWashings.map((washing) => (
-                    <li
-                      key={washing._id}
-                      className=' rounded-lg bg-gray-100 p-4 shadow-sm hover:cursor-pointer hover:bg-gray-200'
-                      onClick={() => handleWashingClick(washing)}
-                    >
-                      <p className='text-gray-800'>
-                        <span className='font-semibold'>Fecha:</span>{' '}
-                        {formatDate(washing.startDate)}
-                      </p>
-                      <p className='text-gray-800'>
-                        <span className='font-semibold'>Filtro:</span>{' '}
-                        {washing.filter.brand} - {washing.filter.model}
-                      </p>
-                      <p className='text-gray-800'>
-                        <span className='font-semibold'>Atendido por:</span>{' '}
-                        {washing.attended
-                          ? `${washing.attended.firstName} ${washing.attended.lastName}`
-                          : 'No especificado'}
-                      </p>
-                    </li>
-                  ))}
+                  {groupByFilter
+                    ? Object.entries(
+                        getSortedWashings() as Record<string, Washing[]>
+                      ).map(([filterName, washings]) => (
+                        <li key={filterName} className='space-y-2'>
+                          <h3 className='font-semibold text-gray-700'>
+                            {filterName}
+                          </h3>
+                          {washings.map((washing) => (
+                            <li
+                              key={washing._id}
+                              className=' rounded-lg bg-gray-100 p-4 shadow-sm hover:cursor-pointer hover:bg-gray-200'
+                              onClick={() => handleWashingClick(washing)}
+                            >
+                              <p className='text-gray-800'>
+                                <span className='font-semibold'>Fecha:</span>{' '}
+                                {formatDate(washing.startDate)}
+                              </p>
+                              <p className='text-gray-800'>
+                                <span className='font-semibold'>Filtro:</span>{' '}
+                                {washing.filter.brand} - {washing.filter.model}
+                              </p>
+                              <p className='text-gray-800'>
+                                <span className='font-semibold'>
+                                  Atendido por:
+                                </span>{' '}
+                                {washing.attended
+                                  ? `${washing.attended.firstName} ${washing.attended.lastName}`
+                                  : 'No especificado'}
+                              </p>
+                            </li>
+                          ))}
+                        </li>
+                      ))
+                    : (getSortedWashings() as Washing[]).map((washing) => (
+                        <li
+                          key={washing._id}
+                          className=' rounded-lg bg-gray-100 p-4 shadow-sm hover:cursor-pointer hover:bg-gray-200'
+                          onClick={() => handleWashingClick(washing)}
+                        >
+                          <p className='text-gray-800'>
+                            <span className='font-semibold'>Fecha:</span>{' '}
+                            {formatDate(washing.startDate)}
+                          </p>
+                          <p className='text-gray-800'>
+                            <span className='font-semibold'>Filtro:</span>{' '}
+                            {washing.filter.brand} - {washing.filter.model}
+                          </p>
+                          <p className='text-gray-800'>
+                            <span className='font-semibold'>Atendido por:</span>{' '}
+                            {washing.attended
+                              ? `${washing.attended.firstName} ${washing.attended.lastName}`
+                              : 'No especificado'}
+                          </p>
+                        </li>
+                      ))}
                 </ul>
               </>
             ) : (
@@ -199,6 +350,61 @@ const HistoryPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        <div className='h-fit rounded-lg bg-white p-6 shadow-md'>
+          <h2 className='mb-4 text-xl font-semibold text-gray-700'>
+            Estadísticas de Filtros
+          </h2>
+          {loading ? (
+            <div className='flex h-40 items-center justify-center'>
+              <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-gray-900'></div>
+            </div>
+          ) : selectedPatient ? (
+            <>
+              <p className='mb-4 text-gray-600'>
+                Filtros utilizados por {selectedPatient.firstName}{' '}
+                {selectedPatient.lastName}
+              </p>
+              <ul className='max-h-96 space-y-4 overflow-y-auto'>
+                {filterStats.map((stat, index) => (
+                  <li
+                    key={index}
+                    className='cursor-pointer rounded-lg bg-gray-100 p-4 shadow-sm hover:bg-gray-200'
+                    onClick={() => handleFilterStatClick(stat)}
+                  >
+                    <p className='text-gray-800'>
+                      <span className='font-semibold'>Filtro:</span>{' '}
+                      {stat.filter.brand} - {stat.filter.model}
+                    </p>
+                    <p className='text-gray-800'>
+                      <span className='font-semibold'>Primer uso:</span>{' '}
+                      {formatDate(stat.filter.firstUse.toString())}
+                    </p>
+                    <p className='text-gray-800'>
+                      <span className='font-semibold'>Estado:</span>{' '}
+                      {stat.filter.status === 'test'
+                        ? 'No pasó test de integridad'
+                        : stat.filter.status === 'range'
+                        ? 'Volumen residual fuera de rango'
+                        : stat.filter.status === 'inactive'
+                        ? 'No disponible'
+                        : stat.filter.status === 'active'
+                        ? 'Disponible'
+                        : stat.filter.status}
+                    </p>
+                    <p className='text-gray-800'>
+                      <span className='font-semibold'>Usos:</span> {stat.count}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className='text-gray-600'>
+              Seleccione un paciente para ver estadísticas de filtros
+            </p>
+          )}
+        </div>
       </div>
 
       {isModalOpen && selectedWashing && (
@@ -206,6 +412,22 @@ const HistoryPage: React.FC = () => {
           washing={selectedWashing}
           onClose={() => setIsModalOpen(false)}
         />
+      )}
+
+      {isFilterModalOpen && selectedFilterStat && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
+          <div className='w-full max-w-lg rounded-lg bg-white p-6 shadow-xl'>
+            <div className='mb-4 flex justify-between'>
+              <h2 className='text-xl font-bold'>Datos del Filtro</h2>
+              <button
+                onClick={() => setIsFilterModalOpen(false)}
+                className='text-gray-500 hover:text-gray-700'
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

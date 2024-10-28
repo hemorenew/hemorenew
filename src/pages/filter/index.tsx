@@ -16,7 +16,7 @@ interface Filter {
   brand: string;
   model: string;
   primingReal: number;
-  firstUse: Date;
+  firstUse: string; // Change from Date to string
   status: string;
 }
 
@@ -115,8 +115,19 @@ const FilterCRUD: React.FC = () => {
 
   const editFilter = (filter: Filter) => {
     setEditingFilter(filter);
+    setSelectedBrand(filter.brand);
+    handleBrandChange(filter.brand);
+
     Object.keys(filter).forEach((key) => {
-      setValue(key as keyof Filter, filter[key as keyof Filter]);
+      if (key === 'patient') {
+        setValue('patient' as any, filter.patient);
+      } else if (key === 'firstUse') {
+        const date = new Date(filter.firstUse);
+        const formattedDate = date.toISOString().split('T')[0];
+        setValue('firstUse', formattedDate);
+      } else {
+        setValue(key as keyof Filter, filter[key as keyof Filter]);
+      }
     });
   };
 
@@ -155,6 +166,16 @@ const FilterCRUD: React.FC = () => {
     setFilteredFilters(filtered);
   }, [searchTerm, filters]);
 
+  const getStatusText = (status: string) => {
+    const statusMap: Record<string, string> = {
+      active: 'Activo',
+      test: 'No pasa test de integridad',
+      range: 'Volumen residual fuera de rango',
+      inactive: 'Inactivo',
+    };
+    return statusMap[status] || status;
+  };
+
   return (
     <div className='flex h-full items-center justify-center bg-gray-100 py-8 lg:min-h-[85vh]'>
       <div className='container mx-auto px-4'>
@@ -169,9 +190,13 @@ const FilterCRUD: React.FC = () => {
                 ? 'Editar Filtro'
                 : 'Designar filtro a un paciente'}
             </h2>
-            <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className='flex flex-col gap-4'
+            >
               <select
                 {...register('patient')}
+                value={editingFilter?.patient?._id || ''}
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               >
                 <option value=''>Seleccionar Paciente</option>
@@ -216,6 +241,8 @@ const FilterCRUD: React.FC = () => {
                 className='w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
 
+              <label htmlFor='firstUse'>Fecha de primer uso</label>
+
               <input
                 {...register('firstUse', {
                   validate: (value) =>
@@ -233,6 +260,8 @@ const FilterCRUD: React.FC = () => {
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               >
                 <option value='active'>Activo</option>
+                <option value='test'>No pasa test de integridad</option>
+                <option value='range'>Volumen residual fuera de rango</option>
                 <option value='inactive'>Inactivo</option>
               </select>
               <button
@@ -289,7 +318,7 @@ const FilterCRUD: React.FC = () => {
                           : 'N/A'}
                       </td>
                       <td className='px-4 py-2'>
-                        {filter.status === 'active' ? 'Activo' : 'Inactivo'}
+                        {getStatusText(filter.status)}
                       </td>
                       <td className='px-4 py-2'>
                         <button
@@ -346,8 +375,7 @@ const FilterCRUD: React.FC = () => {
                 {new Date(formData.firstUse).toLocaleDateString()}
               </p>
               <p>
-                <strong>Estado:</strong>{' '}
-                {formData.status === 'active' ? 'Activo' : 'Inactivo'}
+                <strong>Estado:</strong> {getStatusText(formData.status)}
               </p>
             </div>
 
