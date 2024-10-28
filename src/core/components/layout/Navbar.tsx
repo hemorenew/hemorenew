@@ -41,6 +41,7 @@ const Navbar: React.FC = () => {
               <NavLink href='/filter'>Filtro</NavLink>
               <NavLink href='/washing'>Lavado</NavLink>
               <NavLink href='/history'>Historial</NavLink>
+              <NavLink href='/profile'>Perfil</NavLink>
               <NavLink href='/login' onClick={handleLogout}>
                 Cerrar Sesión
               </NavLink>
@@ -72,6 +73,9 @@ const Navbar: React.FC = () => {
             </NavLink>
             <NavLink href='/history' mobile>
               Historial
+            </NavLink>
+            <NavLink href='/profile' mobile>
+              Perfil
             </NavLink>
             <NavLink href='/login' mobile onClick={handleLogout}>
               Cerrar Sesión
