@@ -196,7 +196,7 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
             options={barOptions}
           />
           <ChartCard
-            title='Distribución de Presión'
+            title='Sensor fuga de sangre'
             type='doughnut'
             data={pressureData}
             options={doughnutOptions}

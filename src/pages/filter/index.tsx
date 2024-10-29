@@ -4,6 +4,7 @@ import { useServerSideLogin } from 'core/hooks/permission/useServerSideLogin';
 import withSession from 'core/lib/session';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface Filter {
   _id: string;
@@ -13,6 +14,16 @@ interface Filter {
   primingReal: number;
   firstUse: string;
   status: string;
+}
+
+interface Washing {
+  filter: Filter;
+  startDate: Date;
+}
+
+interface FilterUsage {
+  filter: Filter;
+  count: number;
 }
 
 const FILTER_DATA = {
@@ -41,6 +52,7 @@ const FilterCRUD: React.FC = () => {
   const [formData, setFormData] = useState<Filter | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredFilters, setFilteredFilters] = useState<Filter[]>([]);
+  const [washings, setWashings] = useState<Washing[]>([]);
 
   const { register, handleSubmit, reset, setValue } = useForm<Filter>();
   const today = new Date().toISOString().split('T')[0];
@@ -48,6 +60,7 @@ const FilterCRUD: React.FC = () => {
   useEffect(() => {
     fetchFilters();
     fetchPatients();
+    fetchWashings();
   }, []);
 
   const fetchPatients = async () => {
@@ -72,11 +85,20 @@ const FilterCRUD: React.FC = () => {
     }
   };
 
+  const fetchWashings = async () => {
+    try {
+      const response = await axios.get('/api/v1/washings');
+      setWashings(response.data);
+    } catch (error) {
+      console.error('Error fetching washings:', error);
+    }
+  };
+
   const onSubmit = async (data: any) => {
     const selectedPatient = patients.find((p) => p._id === data.patient);
 
     if (!selectedPatient) {
-      alert('Por favor seleccione un paciente');
+      toast.error('Por favor seleccione un paciente');
       return;
     }
 
@@ -94,9 +116,27 @@ const FilterCRUD: React.FC = () => {
 
     try {
       if (editingFilter) {
-        await axios.put(`/api/v1/filters/${editingFilter._id}`, formData);
+        await axios
+          .put(`/api/v1/filters/${editingFilter._id}`, formData)
+          .then(() => {
+            toast.success('Filtro actualizado correctamente');
+          })
+          .catch((error) => {
+            toast.error(
+              'Error al actualizar el filtro, ' + error.response.data.message
+            );
+          });
       } else {
-        await axios.post('/api/v1/filters', formData);
+        await axios
+          .post('/api/v1/filters', formData)
+          .then(() => {
+            toast.success('Filtro creado correctamente');
+          })
+          .catch((error) => {
+            toast.error(
+              'Error al crear el filtro, ' + error.response.data.message
+            );
+          });
       }
       await fetchFilters();
       setSelectedBrand('');
@@ -112,7 +152,16 @@ const FilterCRUD: React.FC = () => {
   const deleteFilter = async (id: string) => {
     if (window.confirm('¿Está seguro de que desea eliminar este filtro?')) {
       try {
-        await axios.delete(`/api/v1/filters/${id}`);
+        await axios
+          .delete(`/api/v1/filters/${id}`)
+          .then(() => {
+            toast.success('Filtro eliminado correctamente');
+          })
+          .catch((error) => {
+            toast.error(
+              'Error al eliminar el filtro, ' + error.response.data.message
+            );
+          });
         fetchFilters();
       } catch (error) {
         console.error('Error deleting filter:', error);
@@ -184,6 +233,35 @@ const FilterCRUD: React.FC = () => {
     return statusMap[status] || status;
   };
 
+  const calculateFilterStats = (washings: Washing[]): FilterUsage[] => {
+    const filterMap = new Map<string, FilterUsage>();
+
+    washings
+      .sort(
+        (a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      )
+      .forEach((washing) => {
+        const key = `${washing.filter.brand}-${washing.filter.model}`;
+        const existing = filterMap.get(key);
+
+        if (existing) {
+          existing.count += 1;
+        } else {
+          filterMap.set(key, {
+            filter: {
+              ...washing.filter,
+              firstUse: new Date(washing.startDate).toISOString(),
+              status: washing.filter.status || 'En uso',
+            },
+            count: 1,
+          });
+        }
+      });
+
+    return Array.from(filterMap.values());
+  };
+
   return (
     <div className='flex h-full items-center justify-center bg-gray-100 py-8 lg:min-h-[85vh]'>
       <div className='container mx-auto px-4'>
@@ -243,7 +321,7 @@ const FilterCRUD: React.FC = () => {
               <input
                 {...register('primingReal')}
                 type='number'
-                placeholder='Priming'
+                placeholder='Volumen de filtro inicial'
                 readOnly
                 className='w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
@@ -291,16 +369,16 @@ const FilterCRUD: React.FC = () => {
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
             </div>
-            <table className='w-full'>
+            <table className='w-full text-sm'>
               <thead>
-                <tr className='bg-gray-100'>
+                <tr className='bg-gray-100 '>
                   <th className='px-4 py-2 text-left'>Paciente</th>
                   <th className='px-4 py-2 text-left'>Marca</th>
                   <th className='px-4 py-2 text-left'>Modelo</th>
                   <th className='px-4 py-2 text-left'>Priming</th>
-                  <th className='px-4 py-2 text-left'>Priming real</th>
                   <th className='px-4 py-2 text-left'>Primer uso</th>
                   <th className='px-4 py-2 text-left'>Estado</th>
+                  <th className='px-4 py-2 text-left'>Cantidad de usos</th>
                   <th className='px-4 py-2 text-left'>Acciones</th>
                 </tr>
               </thead>
@@ -315,9 +393,8 @@ const FilterCRUD: React.FC = () => {
                       </td>
                       <td className='px-4 py-2'>{filter.brand}</td>
                       <td className='px-4 py-2'>{filter.model}</td>
-                      <td className='px-4 py-2'>{filter.primingReal}</td>
-                      <td className='px-4 py-2'>
-                        {(filter.primingReal * 0.8).toFixed(2)}
+                      <td className='px-4 py-2 text-center'>
+                        {filter.primingReal}
                       </td>
                       <td className='px-4 py-2'>
                         {filter.firstUse
@@ -327,7 +404,12 @@ const FilterCRUD: React.FC = () => {
                       <td className='px-4 py-2'>
                         {getStatusText(filter.status)}
                       </td>
-                      <td className='px-4 py-2'>
+                      <td className='px-4 py-2 text-center'>
+                        {calculateFilterStats(washings).find(
+                          (f) => f.filter._id === filter._id
+                        )?.count || 'Sin usos'}
+                      </td>
+                      <td className='flex flex-col items-center justify-center gap-1 px-4 py-2'>
                         <button
                           onClick={() => editFilter(filter)}
                           className='mr-2 rounded-md bg-yellow-500 px-2 py-1 text-white transition duration-300 hover:bg-yellow-600'

@@ -2,8 +2,9 @@
 import axios from 'axios';
 import { useServerSideLogin } from 'core/hooks/permission/useServerSideLogin';
 import withSession from 'core/lib/session';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface Washing {
   _id: string;
@@ -24,8 +25,12 @@ const WashingCRUD: React.FC = () => {
   const [filteredWashings, setFilteredWashings] = useState<Washing[]>([]);
   const [sortField, setSortField] = useState<keyof Washing | ''>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [isFilterEnabled, setIsFilterEnabled] = useState(false);
+  const [isDateEnabled, setIsDateEnabled] = useState(false);
 
   const { register, handleSubmit, reset } = useForm<Washing>();
+
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     axios
@@ -107,9 +112,27 @@ const WashingCRUD: React.FC = () => {
           patient: data.patient._id || data.patient,
           filter: data.filter._id || data.filter,
         };
-        await axios.put(`/api/v1/washings/${editingWashing._id}`, updatedData);
+        await axios
+          .put(`/api/v1/washings/${editingWashing._id}`, updatedData)
+          .then(() => {
+            toast.success('Lavado actualizado correctamente');
+          })
+          .catch((error) => {
+            toast.error(
+              'Error al actualizar el lavado, ' + error.response.data.message
+            );
+          });
       } else {
-        await axios.post('/api/v1/washings', data);
+        await axios
+          .post('/api/v1/washings', data)
+          .then(() => {
+            toast.success('Lavado registrado correctamente');
+          })
+          .catch((error) => {
+            toast.error(
+              'Error al crear el lavado, ' + error.response.data.message
+            );
+          });
       }
       fetchWashings();
       reset();
@@ -163,6 +186,11 @@ const WashingCRUD: React.FC = () => {
     setFilteredWashings(sorted);
   };
 
+  const getSortIcon = (field: keyof Washing) => {
+    if (sortField !== field) return '↕️';
+    return sortDirection === 'asc' ? '↑' : '↓';
+  };
+
   return (
     <div className='flex h-full  items-center justify-center bg-gray-100 py-8 lg:min-h-[85vh]'>
       <div className='container mx-auto px-4'>
@@ -184,8 +212,11 @@ const WashingCRUD: React.FC = () => {
                   register('patient').onChange(e);
                   if (e.target.value) {
                     fetchPatientFilters(e.target.value);
+                    setIsFilterEnabled(true);
                   } else {
                     setFilters([]);
+                    setIsFilterEnabled(false);
+                    setIsDateEnabled(false);
                   }
                 }}
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -206,7 +237,12 @@ const WashingCRUD: React.FC = () => {
               </select>
               <select
                 {...register('filter')}
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                disabled={!isFilterEnabled}
+                onChange={(e) => {
+                  register('filter').onChange(e);
+                  setIsDateEnabled(!!e.target.value);
+                }}
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100'
               >
                 <option value=''>Seleccionar Filtro</option>
                 {filters.map((filter) => (
@@ -224,7 +260,18 @@ const WashingCRUD: React.FC = () => {
               <input
                 {...register('startDate')}
                 type='datetime-local'
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                disabled={!isDateEnabled}
+                ref={(e) => {
+                  if (e) dateInputRef.current = e;
+                  return register('startDate').ref(e);
+                }}
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100'
+                onChange={(e) => {
+                  register('startDate').onChange(e);
+                  setTimeout(() => {
+                    dateInputRef.current?.blur();
+                  }, 100);
+                }}
               />
 
               <button
@@ -255,32 +302,27 @@ const WashingCRUD: React.FC = () => {
                     onClick={() => handleSort('patient')}
                   >
                     Paciente{' '}
-                    {sortField === 'patient' &&
-                      (sortDirection === 'asc' ? '↑' : '↓')}
+                    <span className='ml-1'>{getSortIcon('patient')}</span>
                   </th>
                   <th
                     className='cursor-pointer px-4 py-2 text-left hover:bg-gray-200'
                     onClick={() => handleSort('filter')}
                   >
-                    Filtro{' '}
-                    {sortField === 'filter' &&
-                      (sortDirection === 'asc' ? '↑' : '↓')}
+                    Filtro <span className='ml-1'>{getSortIcon('filter')}</span>
                   </th>
                   <th
                     className='cursor-pointer px-4 py-2 text-left hover:bg-gray-200'
                     onClick={() => handleSort('attended')}
                   >
                     Atendido por{' '}
-                    {sortField === 'attended' &&
-                      (sortDirection === 'asc' ? '↑' : '↓')}
+                    <span className='ml-1'>{getSortIcon('attended')}</span>
                   </th>
                   <th
                     className='cursor-pointer px-4 py-2 text-left hover:bg-gray-200'
                     onClick={() => handleSort('startDate')}
                   >
                     Fecha de Inicio{' '}
-                    {sortField === 'startDate' &&
-                      (sortDirection === 'asc' ? '↑' : '↓')}
+                    <span className='ml-1'>{getSortIcon('startDate')}</span>
                   </th>
                 </tr>
               </thead>

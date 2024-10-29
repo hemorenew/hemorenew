@@ -59,11 +59,6 @@ const HistoryPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [groupByFilter, setGroupByFilter] = useState(false);
 
-  // Add new state for filter modal
-  const [selectedFilterStat, setSelectedFilterStat] =
-    useState<FilterUsage | null>(null);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-
   useEffect(() => {
     fetchAllWashings();
   }, []);
@@ -197,12 +192,6 @@ const HistoryPage: React.FC = () => {
         return sortOrder === 'desc' ? comparison : -comparison;
       });
     }
-  };
-
-  // Add click handler
-  const handleFilterStatClick = (stat: FilterUsage) => {
-    setSelectedFilterStat(stat);
-    setIsFilterModalOpen(true);
   };
 
   return (
@@ -369,8 +358,7 @@ const HistoryPage: React.FC = () => {
                 {filterStats.map((stat, index) => (
                   <li
                     key={index}
-                    className='cursor-pointer rounded-lg bg-gray-100 p-4 shadow-sm hover:bg-gray-200'
-                    onClick={() => handleFilterStatClick(stat)}
+                    className='rounded-lg bg-gray-100 p-4 shadow-sm'
                   >
                     <p className='text-gray-800'>
                       <span className='font-semibold'>Filtro:</span>{' '}
@@ -412,22 +400,6 @@ const HistoryPage: React.FC = () => {
           washing={selectedWashing}
           onClose={() => setIsModalOpen(false)}
         />
-      )}
-
-      {isFilterModalOpen && selectedFilterStat && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
-          <div className='w-full max-w-lg rounded-lg bg-white p-6 shadow-xl'>
-            <div className='mb-4 flex justify-between'>
-              <h2 className='text-xl font-bold'>Datos del Filtro</h2>
-              <button
-                onClick={() => setIsFilterModalOpen(false)}
-                className='text-gray-500 hover:text-gray-700'
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

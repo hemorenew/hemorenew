@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 export const professions = [
   'Médico General',
@@ -35,14 +36,14 @@ const Register: React.FC = () => {
 
   const onSubmit = async (data: RegisterUser & { confirmPassword: string }) => {
     if (data.password !== data.confirmPassword) {
-      alert('Las contraseñas no coinciden');
+      toast.warning('Las contraseñas no coinciden');
       return;
     }
     setIsSubmitting(true);
     try {
       const userData = { ...data };
       await axios.post('/api/v1/users', userData);
-      alert(`Usuario registrado exitosamente`);
+      toast.success('Usuario registrado exitosamente');
       router.push('/login');
     } catch (error: any) {
       console.error('Error al registrar usuario:', error);

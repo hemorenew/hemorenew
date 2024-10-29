@@ -30,6 +30,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         if (!updatedPatient) return res.status(404).end(`Patient not found`);
         return res.status(200).json({ updatedPatient });
       } catch (error: any) {
+        if (error.code === 11000) {
+          const field = Object.keys(error.keyPattern)[0];
+          return res.status(400).json({
+            errorMessage: `El ${field} '${body[field]}' ya está en uso`,
+          });
+        }
         return res.status(400).json({ msg: error.message });
       }
     case 'DELETE':

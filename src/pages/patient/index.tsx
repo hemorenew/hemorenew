@@ -4,6 +4,7 @@ import { useServerSideLogin } from 'core/hooks/permission/useServerSideLogin';
 import withSession from 'core/lib/session';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface Patient {
   _id: string;
@@ -37,41 +38,70 @@ const PatientCRUD: React.FC = () => {
   }, []);
 
   const fetchPatients = async () => {
-    try {
-      const response = await axios.get('/api/v1/patients');
-      setPatients(response.data);
-    } catch (error: any) {
-      console.error('Error fetching patients:', error.errorMessage);
-      alert(error.errorMessage);
-    }
+    await axios
+      .get('/api/v1/patients')
+      .then((res) => {
+        setPatients(res.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching patients:', error.errorMessage);
+        toast.error(error.errorMessage);
+      });
   };
 
   const onSubmit = async (data: Patient) => {
     data.attended = userId;
     try {
       if (editingPatient) {
-        await axios.put(`/api/v1/patients/${editingPatient._id}`, data);
+        await axios
+          .put(`/api/v1/patients/${editingPatient._id}`, data)
+          .then(() => {
+            toast.success('Paciente actualizado exitosamente');
+          })
+          .catch((error) => {
+            toast.error(
+              error.response?.data?.errorMessage ||
+                'Error al actualizar paciente'
+            );
+          });
       } else {
-        await axios.post('/api/v1/patients', data);
+        await axios
+          .post('/api/v1/patients', data)
+          .then(() => {
+            toast.success('Paciente registrado exitosamente');
+          })
+          .catch((error) => {
+            toast.error(
+              error.response?.data?.errorMessage ||
+                'Error al registrar paciente'
+            );
+          });
       }
       fetchPatients();
       reset();
       setEditingPatient(null);
     } catch (error: any) {
-      console.error('Error saving patient:', error.errorMessage);
-      alert(error.errorMessage);
+      console.error(
+        'Error saving patient:',
+        error.response?.data?.errorMessage
+      );
+      toast.error(
+        error.response?.data?.errorMessage || 'Error al guardar paciente'
+      );
     }
   };
 
   const deletePatient = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this patient?')) {
-      try {
-        await axios.delete(`/api/v1/patients/${id}`);
-        fetchPatients();
-      } catch (error: any) {
-        console.error('Error deleting patient:', error.errorMessage);
-        alert(error.errorMessage);
-      }
+      await axios
+        .delete(`/api/v1/patients/${id}`)
+        .then(() => {
+          toast.success('Paciente eliminado exitosamente');
+        })
+        .catch((error) => {
+          toast.error(error.errorMessage);
+        });
+      fetchPatients();
     }
   };
 
@@ -209,8 +239,12 @@ const PatientCRUD: React.FC = () => {
                     {...register('phone', {
                       required: 'Este campo es requerido',
                       pattern: {
-                        value: /^[0-9]+$/,
-                        message: 'Solo se permiten números',
+                        value: /^[0-9]{1,8}$/,
+                        message: 'Solo se permiten números (máximo 8 dígitos)',
+                      },
+                      maxLength: {
+                        value: 8,
+                        message: 'Máximo 8 dígitos permitidos',
                       },
                     })}
                     type='number'
