@@ -7,16 +7,11 @@ import { useForm } from 'react-hook-form';
 
 interface Filter {
   _id: string;
-  patient: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    ci: string;
-  };
+  patient: any;
   brand: string;
   model: string;
   primingReal: number;
-  firstUse: string; // Change from Date to string
+  firstUse: string;
   status: string;
 }
 
@@ -77,8 +72,20 @@ const FilterCRUD: React.FC = () => {
     }
   };
 
-  const onSubmit = async (data: Filter) => {
-    setFormData(data);
+  const onSubmit = async (data: any) => {
+    const selectedPatient = patients.find((p) => p._id === data.patient);
+
+    if (!selectedPatient) {
+      alert('Por favor seleccione un paciente');
+      return;
+    }
+
+    const formattedData = {
+      ...data,
+      patient: selectedPatient,
+    };
+
+    setFormData(formattedData);
     setShowConfirmModal(true);
   };
 
@@ -118,17 +125,18 @@ const FilterCRUD: React.FC = () => {
     setSelectedBrand(filter.brand);
     handleBrandChange(filter.brand);
 
-    Object.keys(filter).forEach((key) => {
-      if (key === 'patient') {
-        setValue('patient' as any, filter.patient);
-      } else if (key === 'firstUse') {
-        const date = new Date(filter.firstUse);
-        const formattedDate = date.toISOString().split('T')[0];
-        setValue('firstUse', formattedDate);
-      } else {
-        setValue(key as keyof Filter, filter[key as keyof Filter]);
-      }
-    });
+    setValue('patient', filter.patient._id);
+    setValue('brand', filter.brand);
+    setValue('model', filter.model);
+    setValue('primingReal', filter.primingReal);
+
+    if (filter.firstUse) {
+      const date = new Date(filter.firstUse);
+      const formattedDate = date.toISOString().split('T')[0];
+      setValue('firstUse', formattedDate);
+    }
+
+    setValue('status', filter.status);
   };
 
   const handleBrandChange = (brand: string) => {
@@ -196,7 +204,6 @@ const FilterCRUD: React.FC = () => {
             >
               <select
                 {...register('patient')}
-                value={editingFilter?.patient?._id || ''}
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               >
                 <option value=''>Seleccionar Paciente</option>
@@ -357,9 +364,8 @@ const FilterCRUD: React.FC = () => {
 
             <div className='space-y-2'>
               <p>
-                <strong>Paciente:</strong>{' '}
-                {patients.find((p) => p._id === formData.patient)?.firstName}{' '}
-                {patients.find((p) => p._id === formData.patient)?.lastName}
+                <strong>Paciente:</strong> {formData.patient.firstName}{' '}
+                {formData.patient.lastName}
               </p>
               <p>
                 <strong>Marca:</strong> {formData.brand}
