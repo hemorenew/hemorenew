@@ -99,7 +99,7 @@ const PatientCRUD: React.FC = () => {
           toast.success('Paciente eliminado exitosamente');
         })
         .catch((error) => {
-          toast.error(error.errorMessage);
+          toast.error(error.response?.data?.message);
         });
       fetchPatients();
     }

@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import Filter from 'core/models/Filter';
 import Patient from 'core/models/Patient';
+import Washing from 'core/models/Washing';
 import { dbConnect } from 'core/utils/mongosee';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -40,11 +42,29 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     case 'DELETE':
       try {
+        // Check for existing filters
+        const filterExists = await Filter.findOne({ patient: id });
+        if (filterExists) {
+          return res.status(400).json({
+            message:
+              'No se puede eliminar el paciente porque tiene filtros registrados',
+          });
+        }
+
+        // Check for existing washings
+        const washingExists = await Washing.findOne({ patient: id });
+        if (washingExists) {
+          return res.status(400).json({
+            message:
+              'No se puede eliminar el paciente porque tiene lavados registrados',
+          });
+        }
+
         const deletedPatient = await Patient.findByIdAndDelete(id);
         if (!deletedPatient) return res.status(404).end(`Patient not found`);
         return res.status(204).json({ deletedPatient });
       } catch (error: any) {
-        return res.status(400).json({ msg: error.message });
+        return res.status(400).json({ message: error.message });
       }
     default:
       return res.status(405).end(`Method ${method} Not Allowed`);

@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface ProfileForm {
   firstName: string;
@@ -33,6 +35,11 @@ const ProfilePage = () => {
         const userResponse = await axios.get('/api/auth/user');
         const userId = userResponse.data.id;
 
+        if (!userId) {
+          toast.error('Error: No se pudo obtener el ID del usuario');
+          return;
+        }
+
         const detailedUserResponse = await axios.get(`/api/v1/users/${userId}`);
         const userData = detailedUserResponse.data.user;
 
@@ -46,6 +53,7 @@ const ProfilePage = () => {
         });
       } catch (error) {
         console.error('Error fetching user data:', error);
+        toast.error('Error al cargar los datos del usuario');
       }
     };
     fetchUserData();
@@ -59,29 +67,51 @@ const ProfilePage = () => {
           return;
         }
 
-        await axios.put(`/api/v1/users/${user.id}/password`, {
-          currentPassword: data.currentPassword,
-          newPassword: data.newPassword,
-        });
-        alert('Contraseña actualizada exitosamente');
-        setIsChangingPassword(false);
+        await axios
+          .put(`/api/v1/users/${user._id}/password`, {
+            currentPassword: data.currentPassword,
+            newPassword: data.newPassword,
+          })
+          .then(() => {
+            toast.success('Contraseña actualizada exitosamente');
+            setIsChangingPassword(false);
+          })
+          .catch((error) => {
+            toast.error(error.response?.data?.message);
+          });
       } else {
-        await axios.put(`/api/v1/users/${user.id}`, {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          ci: data.ci,
-          profession: data.profession,
-          phone: data.phone,
-        });
-        alert('Perfil actualizado exitosamente');
+        await axios
+          .put(`/api/v1/users/${user._id}`, {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            ci: data.ci,
+            profession: data.profession,
+            phone: data.phone,
+          })
+          .then((response) => {
+            setUser(response.data.user);
+            toast.success('Perfil actualizado exitosamente');
+          })
+          .catch((error) => {
+            toast.error(
+              error.response?.data?.message || 'Error al actualizar el perfil'
+            );
+          });
       }
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Error al actualizar el perfil');
+      toast.error(
+        error.response?.data?.message || 'Error al actualizar el perfil'
+      );
     }
   };
 
   if (!user) {
     return <div>Cargando...</div>;
+  }
+
+  if (!user?._id) {
+    toast.error('Error: No se pudo cargar el ID del usuario');
+    return <div>Error al cargar el perfil</div>;
   }
 
   return (

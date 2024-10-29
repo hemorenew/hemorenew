@@ -24,13 +24,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     case 'PUT':
       try {
-        const updateTask = await User.findByIdAndUpdate(id, body, {
+        const updatedUser = await User.findByIdAndUpdate(id, body, {
           new: true,
         });
-        if (!updateTask) return res.status(404).end(`User not found`);
-        return res.status(200).json({ updateTask });
+        if (!updatedUser)
+          return res.status(404).json({ message: 'Usuario no encontrado' });
+        return res.status(200).json({ user: updatedUser });
       } catch (error: any) {
-        return res.status(400).json({ msg: error.message });
+        return res.status(400).json({ message: error.message });
       }
     case 'DELETE':
       try {

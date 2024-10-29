@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Filter from 'core/models/Filter';
 import Patient from 'core/models/Patient';
+import Washing from 'core/models/Washing';
 import { dbConnect } from 'core/utils/mongosee';
 import { NextApiRequest, NextApiResponse } from 'next';
 
@@ -38,6 +39,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     case 'DELETE':
       try {
+        const washingExists = await Washing.findOne({ filter: id });
+        if (washingExists) {
+          return res.status(400).json({
+            message:
+              'No se puede eliminar el filtro porque ya ha sido utilizado en lavados',
+          });
+        }
+
         const deletedFilter = await Filter.findByIdAndDelete(id);
         if (!deletedFilter) return res.status(404).end(`Filter not found`);
         return res.status(204).json({ deletedFilter });
