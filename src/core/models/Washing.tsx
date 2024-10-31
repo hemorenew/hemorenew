@@ -21,8 +21,7 @@ const WashingSchema = new Schema(
       type: Number,
     },
     integrityTest: {
-      type: Boolean,
-      required: true,
+      type: Number,
     },
     startDate: {
       type: Date,

@@ -13,7 +13,7 @@ interface Washing {
   startDate: string;
   attended: any;
   residualVolume: number;
-  integrityTest: boolean;
+  integrityTest: number;
   status: string;
 }
 
@@ -118,6 +118,7 @@ const WashingCRUD: React.FC = () => {
           ...data,
           patient: data.patient._id || data.patient,
           filter: data.filter._id || data.filter,
+          integrityTest: Number(data.integrityTest),
         };
         await axios
           .put(`/api/v1/washings/${editingWashing._id}`, updatedData)
@@ -147,7 +148,7 @@ const WashingCRUD: React.FC = () => {
         filter: '',
         startDate: '',
         residualVolume: 0,
-        integrityTest: false,
+        integrityTest: 0,
       });
       setEditingWashing(null);
       setIsFilterEnabled(false);
@@ -315,18 +316,20 @@ const WashingCRUD: React.FC = () => {
               <select
                 {...register('integrityTest', {
                   required: 'Este campo es requerido',
+                  setValueAs: (value) => Number(value),
                 })}
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               >
+                <option value=''>Seleccionar Test de Integridad</option>
                 <option
-                  value='false'
-                  selected={editingWashing?.integrityTest === false}
+                  value='0'
+                  selected={editingWashing?.integrityTest === 0}
                 >
                   No se detecta ruptura
                 </option>
                 <option
-                  value='true'
-                  selected={editingWashing?.integrityTest === true}
+                  value='1'
+                  selected={editingWashing?.integrityTest === 1}
                 >
                   Se detecta ruptura
                 </option>
@@ -404,7 +407,9 @@ const WashingCRUD: React.FC = () => {
                     </td>
                     <td className='px-4 py-2'>{washing.residualVolume}</td>
                     <td className='px-4 py-2'>
-                      {washing.integrityTest ? 'Sí' : 'No'}
+                      {washing.integrityTest === 0
+                        ? 'No se detecta ruptura'
+                        : 'Se detecta ruptura'}
                     </td>
                     <td className='px-4 py-2'>
                       <button
