@@ -12,6 +12,8 @@ interface Washing {
   filter: any;
   startDate: string;
   attended: any;
+  residualVolume: number;
+  integrityTest: boolean;
   status: string;
 }
 
@@ -28,7 +30,12 @@ const WashingCRUD: React.FC = () => {
   const [isFilterEnabled, setIsFilterEnabled] = useState(false);
   const [isDateEnabled, setIsDateEnabled] = useState(false);
 
-  const { register, handleSubmit, reset } = useForm<Washing>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<Washing>();
 
   const dateInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -135,8 +142,16 @@ const WashingCRUD: React.FC = () => {
           });
       }
       fetchWashings();
-      reset();
+      reset({
+        patient: '',
+        filter: '',
+        startDate: '',
+        residualVolume: 0,
+        integrityTest: false,
+      });
       setEditingWashing(null);
+      setIsFilterEnabled(false);
+      setIsDateEnabled(false);
     } catch (error) {
       console.error('Error saving washing:', error);
     }
@@ -205,7 +220,10 @@ const WashingCRUD: React.FC = () => {
                 ? 'Editar Lavado'
                 : 'Registrar el procesado de un filtro'}
             </h2>
-            <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className='flex flex-col gap-4'
+            >
               <select
                 {...register('patient')}
                 onChange={(e) => {
@@ -273,6 +291,46 @@ const WashingCRUD: React.FC = () => {
                   }, 100);
                 }}
               />
+              <input
+                {...register('residualVolume', {
+                  valueAsNumber: true,
+                  max: {
+                    value: 200,
+                    message: 'El volumen residual debe ser menor que 200',
+                  },
+                })}
+                type='number'
+                step='0.1'
+                placeholder='Volumen residual (ml)'
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              />
+              {errors.residualVolume && (
+                <p className='mt-1 text-sm text-red-500'>
+                  {errors.residualVolume.message}
+                </p>
+              )}
+
+              <label htmlFor='integrityTest'>Test de integridad</label>
+
+              <select
+                {...register('integrityTest', {
+                  required: 'Este campo es requerido',
+                })}
+                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              >
+                <option
+                  value='false'
+                  selected={editingWashing?.integrityTest === false}
+                >
+                  No se detecta ruptura
+                </option>
+                <option
+                  value='true'
+                  selected={editingWashing?.integrityTest === true}
+                >
+                  Se detecta ruptura
+                </option>
+              </select>
 
               <button
                 type='submit'
@@ -294,7 +352,7 @@ const WashingCRUD: React.FC = () => {
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
               />
             </div>
-            <table className='w-full'>
+            <table className='w-full text-sm'>
               <thead>
                 <tr className='bg-gray-100'>
                   <th
@@ -324,6 +382,9 @@ const WashingCRUD: React.FC = () => {
                     Fecha de Inicio{' '}
                     <span className='ml-1'>{getSortIcon('startDate')}</span>
                   </th>
+                  <th className='px-4 py-2 text-left'>Volumen Residual</th>
+                  <th className='px-4 py-2 text-left'>Test de Integridad</th>
+                  <th className='px-4 py-2 text-left'>Actualizar</th>
                 </tr>
               </thead>
               <tbody>
@@ -340,6 +401,32 @@ const WashingCRUD: React.FC = () => {
                     </td>
                     <td className='px-4 py-2'>
                       {formatDateForDisplay(washing.startDate)}
+                    </td>
+                    <td className='px-4 py-2'>{washing.residualVolume}</td>
+                    <td className='px-4 py-2'>
+                      {washing.integrityTest ? 'Sí' : 'No'}
+                    </td>
+                    <td className='px-4 py-2'>
+                      <button
+                        className='rounded-md bg-blue-500 py-2 px-4 text-white transition duration-300 hover:bg-blue-600'
+                        onClick={() => {
+                          setEditingWashing(washing);
+                          reset({
+                            patient: washing.patient._id,
+                            filter: washing.filter._id,
+                            startDate: new Date(washing.startDate)
+                              .toISOString()
+                              .slice(0, 16),
+                            residualVolume: washing.residualVolume,
+                            integrityTest: washing.integrityTest,
+                          });
+                          setIsFilterEnabled(true);
+                          setIsDateEnabled(true);
+                          fetchPatientFilters(washing.patient._id);
+                        }}
+                      >
+                        Actualizar
+                      </button>
                     </td>
                   </tr>
                 ))}

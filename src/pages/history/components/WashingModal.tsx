@@ -72,11 +72,11 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
   };
 
   const pressureData = {
-    labels: ['Baja', 'Media', 'Alta'],
+    labels: ['Sangre Detectada', 'Sangre No Detectada'],
     datasets: [
       {
         label: 'Presión',
-        data: [30, 50, 20],
+        data: [1, 0],
         backgroundColor: [
           'rgba(255, 99, 132, 0.5)',
           'rgba(54, 162, 235, 0.5)',

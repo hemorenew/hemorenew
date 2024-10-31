@@ -17,6 +17,13 @@ const WashingSchema = new Schema(
       ref: 'User',
       require: true,
     },
+    residualVolume: {
+      type: Number,
+    },
+    integrityTest: {
+      type: Boolean,
+      required: true,
+    },
     startDate: {
       type: Date,
     },

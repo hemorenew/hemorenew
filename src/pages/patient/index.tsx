@@ -261,7 +261,6 @@ const PatientCRUD: React.FC = () => {
                   <input
                     {...register('dryWeight', {
                       valueAsNumber: true,
-                      required: 'Este campo es requerido',
                       min: {
                         value: 0,
                         message: 'El peso seco debe ser mayor que 0',

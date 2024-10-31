@@ -31,6 +31,8 @@ interface Washing {
     firstName: string;
     lastName: string;
   };
+  residualVolume: number;
+  integrityTest: boolean;
 }
 
 interface FilterUsage {
@@ -304,6 +306,20 @@ const HistoryPage: React.FC = () => {
                                   ? `${washing.attended.firstName} ${washing.attended.lastName}`
                                   : 'No especificado'}
                               </p>
+                              <p className='text-gray-800'>
+                                <span className='font-semibold'>
+                                  Volumen Residual:
+                                </span>{' '}
+                                {washing.residualVolume} ml
+                              </p>
+                              <p className='text-gray-800'>
+                                <span className='font-semibold'>
+                                  Test de Integridad:
+                                </span>{' '}
+                                {washing.integrityTest ?? false
+                                  ? 'No se detecta ruptura'
+                                  : 'Se detecta ruptura'}
+                              </p>
                             </li>
                           ))}
                         </li>
@@ -327,6 +343,20 @@ const HistoryPage: React.FC = () => {
                             {washing.attended
                               ? `${washing.attended.firstName} ${washing.attended.lastName}`
                               : 'No especificado'}
+                          </p>
+                          <p className='text-gray-800'>
+                            <span className='font-semibold'>
+                              Volumen Residual:
+                            </span>{' '}
+                            {washing.residualVolume} ml
+                          </p>
+                          <p className='text-gray-800'>
+                            <span className='font-semibold'>
+                              Test de Integridad:
+                            </span>{' '}
+                            {washing.integrityTest ?? 'false'
+                              ? 'No se detecta ruptura'
+                              : 'Se detecta ruptura'}
                           </p>
                         </li>
                       ))}
