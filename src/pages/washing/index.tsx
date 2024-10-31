@@ -13,7 +13,7 @@ interface Washing {
   startDate: string;
   attended: any;
   residualVolume: number;
-  integrityTest: number;
+  integrityTest: number | null;
   status: string;
 }
 
@@ -110,6 +110,15 @@ const WashingCRUD: React.FC = () => {
   };
 
   const onSubmit = async (data: Washing) => {
+    if (
+      !data.patient ||
+      !data.filter ||
+      !data.startDate ||
+      data.residualVolume === undefined
+    ) {
+      toast.error('Por favor complete todos los campos requeridos');
+      return;
+    }
     data.attended = userId;
 
     try {
@@ -118,16 +127,24 @@ const WashingCRUD: React.FC = () => {
           ...data,
           patient: data.patient._id || data.patient,
           filter: data.filter._id || data.filter,
-          integrityTest: Number(data.integrityTest),
+          integrityTest:
+            data.integrityTest === null ? null : Number(data.integrityTest),
+          startDate: data.startDate,
         };
+
+        console.log('Sending update:', updatedData);
+
         await axios
           .put(`/api/v1/washings/${editingWashing._id}`, updatedData)
-          .then(() => {
+          .then((response) => {
+            console.log('Update response:', response.data);
             toast.success('Lavado actualizado correctamente');
+            fetchWashings();
           })
           .catch((error) => {
+            console.error('Update error:', error);
             toast.error(
-              'Error al actualizar el lavado, ' + error.response.data.message
+              'Error al actualizar el lavado, ' + error.response?.data?.message
             );
           });
       } else {
@@ -207,6 +224,13 @@ const WashingCRUD: React.FC = () => {
     return sortDirection === 'asc' ? '↑' : '↓';
   };
 
+  const adjustDateForTimezone = (date: string) => {
+    const d = new Date(date);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 16);
+  };
+
   return (
     <div className='flex h-full  items-center justify-center bg-gray-100 py-8 lg:min-h-[85vh]'>
       <div className='container mx-auto px-4'>
@@ -226,7 +250,7 @@ const WashingCRUD: React.FC = () => {
               className='flex flex-col gap-4'
             >
               <select
-                {...register('patient')}
+                {...register('patient', { required: 'Seleccione un paciente' })}
                 onChange={(e) => {
                   register('patient').onChange(e);
                   if (e.target.value) {
@@ -254,8 +278,13 @@ const WashingCRUD: React.FC = () => {
                   </option>
                 ))}
               </select>
+              {errors.patient && (
+                <p className='mt-1 text-sm text-red-500'>
+                  {errors.patient?.message?.toString()}
+                </p>
+              )}
               <select
-                {...register('filter')}
+                {...register('filter', { required: 'Seleccione un filtro' })}
                 disabled={!isFilterEnabled}
                 onChange={(e) => {
                   register('filter').onChange(e);
@@ -276,8 +305,13 @@ const WashingCRUD: React.FC = () => {
                   </option>
                 ))}
               </select>
+              {errors.filter && (
+                <p className='mt-1 text-sm text-red-500'>
+                  {errors.filter?.message?.toString()}
+                </p>
+              )}
               <input
-                {...register('startDate')}
+                {...register('startDate', { required: 'Seleccione una fecha' })}
                 type='datetime-local'
                 disabled={!isDateEnabled}
                 ref={(e) => {
@@ -292,6 +326,11 @@ const WashingCRUD: React.FC = () => {
                   }, 100);
                 }}
               />
+              {errors.startDate && (
+                <p className='mt-1 text-sm text-red-500'>
+                  {errors.startDate?.message?.toString()}
+                </p>
+              )}
               <input
                 {...register('residualVolume', {
                   valueAsNumber: true,
@@ -307,7 +346,7 @@ const WashingCRUD: React.FC = () => {
               />
               {errors.residualVolume && (
                 <p className='mt-1 text-sm text-red-500'>
-                  {errors.residualVolume.message}
+                  {errors.residualVolume?.message?.toString()}
                 </p>
               )}
 
@@ -315,24 +354,14 @@ const WashingCRUD: React.FC = () => {
 
               <select
                 {...register('integrityTest', {
-                  required: 'Este campo es requerido',
-                  setValueAs: (value) => Number(value),
+                  setValueAs: (value) => (value === '' ? null : Number(value)),
                 })}
                 className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                defaultValue={editingWashing?.integrityTest?.toString() ?? ''}
               >
-                <option value=''>Seleccionar Test de Integridad</option>
-                <option
-                  value='0'
-                  selected={editingWashing?.integrityTest === 0}
-                >
-                  No se detecta ruptura
-                </option>
-                <option
-                  value='1'
-                  selected={editingWashing?.integrityTest === 1}
-                >
-                  Se detecta ruptura
-                </option>
+                <option value={0}>Pendiente</option>
+                <option value={1}>No se detecta ruptura</option>
+                <option value={2}>Se detecta ruptura</option>
               </select>
 
               <button
@@ -408,6 +437,8 @@ const WashingCRUD: React.FC = () => {
                     <td className='px-4 py-2'>{washing.residualVolume}</td>
                     <td className='px-4 py-2'>
                       {washing.integrityTest === 0
+                        ? 'Pendiente'
+                        : washing.integrityTest === 1
                         ? 'No se detecta ruptura'
                         : 'Se detecta ruptura'}
                     </td>
@@ -419,9 +450,7 @@ const WashingCRUD: React.FC = () => {
                           reset({
                             patient: washing.patient._id,
                             filter: washing.filter._id,
-                            startDate: new Date(washing.startDate)
-                              .toISOString()
-                              .slice(0, 16),
+                            startDate: adjustDateForTimezone(washing.startDate),
                             residualVolume: washing.residualVolume,
                             integrityTest: washing.integrityTest,
                           });

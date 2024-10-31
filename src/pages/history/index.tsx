@@ -32,7 +32,7 @@ interface Washing {
     lastName: string;
   };
   residualVolume: number;
-  integrityTest: boolean;
+  integrityTest: number;
 }
 
 interface FilterUsage {
@@ -354,9 +354,11 @@ const HistoryPage: React.FC = () => {
                             <span className='font-semibold'>
                               Test de Integridad:
                             </span>{' '}
-                            {washing.integrityTest ?? 'false'
+                            {washing.integrityTest === 1
                               ? 'No se detecta ruptura'
-                              : 'Se detecta ruptura'}
+                              : washing.integrityTest === 2
+                              ? 'Se detecta ruptura'
+                              : 'Pendiente'}
                           </p>
                         </li>
                       ))}

@@ -32,11 +32,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
             startDate: body.startDate,
             attended: body.attended,
             status: body.status,
+            residualVolume: body.residualVolume,
+            integrityTest: body.integrityTest,
           },
           { new: true }
         )
           .populate('patient')
-          .populate('filter');
+          .populate('filter')
+          .populate('attended');
         if (!updatedWashing) return res.status(404).end(`Washing not found`);
         return res.status(200).json(updatedWashing);
       } catch (error: any) {
