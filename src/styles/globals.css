@@ -1,3 +1,75 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.carousel .control-arrow {
+  background: rgba(0, 0, 0, 0.3) !important;
+  padding: 20px !important;
+}
+
+.carousel .control-prev.control-arrow:before {
+  border-right: 8px solid #fff !important;
+}
+
+.carousel .control-next.control-arrow:before {
+  border-left: 8px solid #fff !important;
+}
+
+.carousel.carousel-slider {
+  height: 100vh !important;
+}
+
+.carousel .control-arrow {
+  opacity: 1 !important;
+  height: 100% !important;
+  top: 0 !important;
+  width: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.carousel .control-prev.control-arrow {
+  left: 0 !important;
+}
+
+.carousel .control-next.control-arrow {
+  right: 0 !important;
+}
+
+.carousel .control-arrow:hover {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.carousel-container {
+  height: 100vh !important;
+  width: 100% !important;
+}
+
+.carousel-slide {
+  height: 100vh !important;
+  width: 100% !important;
+}
+
+.carousel-image {
+  width: 100% !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+}
+
+/* Mejora la visibilidad de los controles */
+.carousel .control-dots {
+  bottom: 20px !important;
+  z-index: 20 !important;
+}
+
+.carousel .control-dots .dot {
+  width: 12px !important;
+  height: 12px !important;
+  background: white !important;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.carousel .control-dots .dot.selected {
+  background: #2563eb !important;
+}

@@ -44,6 +44,7 @@
     "react-hook-form": "^7.43.9",
     "react-icons": "^4.7.1",
     "react-modal": "^3.16.1",
+    "react-responsive-carousel": "^3.2.23",
     "react-switch": "^7.0.0",
     "react-toastify": "^9.1.2",
     "sharp": "^0.32.0",
