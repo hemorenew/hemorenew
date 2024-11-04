@@ -265,6 +265,10 @@ const PatientCRUD: React.FC = () => {
                         value: 0,
                         message: 'El peso seco debe ser mayor que 0',
                       },
+                      max: {
+                        value: 200,
+                        message: 'El peso seco debe ser menor que 200',
+                      },
                     })}
                     type='number'
                     step='0.1'

@@ -331,7 +331,7 @@ const WashingCRUD: React.FC = () => {
                   {errors.startDate?.message?.toString()}
                 </p>
               )}
-              <input
+              {/* <input
                 {...register('residualVolume', {
                   valueAsNumber: true,
                   max: {
@@ -362,7 +362,7 @@ const WashingCRUD: React.FC = () => {
                 <option value={0}>Pendiente</option>
                 <option value={1}>No se detecta ruptura</option>
                 <option value={2}>Se detecta ruptura</option>
-              </select>
+              </select> */}
 
               <button
                 type='submit'
@@ -416,7 +416,6 @@ const WashingCRUD: React.FC = () => {
                   </th>
                   <th className='px-4 py-2 text-left'>Volumen Residual</th>
                   <th className='px-4 py-2 text-left'>Test de Integridad</th>
-                  <th className='px-4 py-2 text-left'>Actualizar</th>
                 </tr>
               </thead>
               <tbody>
@@ -442,7 +441,7 @@ const WashingCRUD: React.FC = () => {
                         ? 'No se detecta ruptura'
                         : 'Se detecta ruptura'}
                     </td>
-                    <td className='px-4 py-2'>
+                    {/* <td className='px-4 py-2'>
                       <button
                         className='rounded-md bg-blue-500 py-2 px-4 text-white transition duration-300 hover:bg-blue-600'
                         onClick={() => {
@@ -461,7 +460,7 @@ const WashingCRUD: React.FC = () => {
                       >
                         Actualizar
                       </button>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>

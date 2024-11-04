@@ -347,7 +347,7 @@ const FilterCRUD: React.FC = () => {
                 <option value='active'>Activo</option>
                 <option value='test'>No pasa test de integridad</option>
                 <option value='range'>Volumen residual fuera de rango</option>
-                <option value='inactive'>Inactivo</option>
+                <option value='inactive'>Desechado</option>
               </select>
               <button
                 type='submit'

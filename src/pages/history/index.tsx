@@ -5,6 +5,8 @@ import withSession from 'core/lib/session';
 import WashingModal from 'pages/history/components/WashingModal';
 import React, { useEffect, useState } from 'react';
 
+import FilterModal from './components/FilterModal';
+
 interface Patient {
   _id: string;
   firstName: string;
@@ -60,6 +62,10 @@ const HistoryPage: React.FC = () => {
   const [filterStats, setFilterStats] = useState<FilterUsage[]>([]);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [groupByFilter, setGroupByFilter] = useState(false);
+  const [selectedFilterModal, setSelectedFilterModal] = useState<{
+    filter: FilterUsage['filter'];
+    count: number;
+  } | null>(null);
 
   useEffect(() => {
     fetchAllWashings();
@@ -194,6 +200,32 @@ const HistoryPage: React.FC = () => {
         return sortOrder === 'desc' ? comparison : -comparison;
       });
     }
+  };
+
+  const handleFilterClick = (filter: FilterUsage) => {
+    setSelectedFilterModal(filter);
+  };
+
+  const getFilterWashingData = (filterId: string) => {
+    const washings = patientWashings
+      .filter((w) => `${w.filter.brand}-${w.filter.model}` === `${filterId}`)
+      .sort(
+        (a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+
+    return {
+      labels: washings.map((w) => formatDate(w.startDate)),
+      datasets: [
+        {
+          label: 'Volumen Residual (ml)',
+          data: washings.map((w) => w.residualVolume),
+          borderColor: 'rgb(53, 162, 235)',
+          backgroundColor: 'rgba(53, 162, 235, 0.5)',
+          tension: 0.3,
+        },
+      ],
+    };
   };
 
   return (
@@ -390,7 +422,8 @@ const HistoryPage: React.FC = () => {
                 {filterStats.map((stat, index) => (
                   <li
                     key={index}
-                    className='rounded-lg bg-gray-100 p-4 shadow-sm'
+                    className='rounded-lg bg-gray-100 p-4 shadow-sm hover:cursor-pointer hover:bg-gray-200'
+                    onClick={() => handleFilterClick(stat)}
                   >
                     <p className='text-gray-800'>
                       <span className='font-semibold'>Filtro:</span>{' '}
@@ -431,6 +464,17 @@ const HistoryPage: React.FC = () => {
         <WashingModal
           washing={selectedWashing}
           onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      {selectedFilterModal && (
+        <FilterModal
+          filter={selectedFilterModal.filter}
+          count={selectedFilterModal.count}
+          onClose={() => setSelectedFilterModal(null)}
+          data={getFilterWashingData(
+            `${selectedFilterModal.filter.brand}-${selectedFilterModal.filter.model}`
+          )}
         />
       )}
     </div>

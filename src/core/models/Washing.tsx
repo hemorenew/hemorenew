@@ -19,6 +19,7 @@ const WashingSchema = new Schema(
     },
     residualVolume: {
       type: Number,
+      default: 0,
     },
     integrityTest: {
       type: Number,
