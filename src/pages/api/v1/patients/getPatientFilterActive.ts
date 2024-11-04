@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Filter from 'core/models/Filter';
 import Patient from 'core/models/Patient';
 import { dbConnect } from 'core/utils/mongosee';

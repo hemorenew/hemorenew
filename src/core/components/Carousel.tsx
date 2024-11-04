@@ -18,6 +18,7 @@ interface CarouselProps {
 const Carousel: React.FC<CarouselProps> = ({ onStart }) => {
   const [carouselItems, setCarouselItems] = useState<CarouselItem[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const secondsAutoChangeImage = 10000;
 
   useEffect(() => {
     axios
@@ -76,7 +77,7 @@ const Carousel: React.FC<CarouselProps> = ({ onStart }) => {
       setCurrentImageIndex((prev) =>
         prev === carouselItems.length - 1 ? 0 : prev + 1
       );
-    }, 5000);
+    }, secondsAutoChangeImage);
 
     return () => clearInterval(timer);
   }, [carouselItems.length]);

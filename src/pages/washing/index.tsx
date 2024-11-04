@@ -110,25 +110,31 @@ const WashingCRUD: React.FC = () => {
   };
 
   const onSubmit = async (data: Washing) => {
-    if (
-      !data.patient ||
-      !data.filter ||
-      !data.startDate ||
-      data.residualVolume === undefined
-    ) {
-      toast.error('Por favor complete todos los campos requeridos');
-      return;
-    }
-    data.attended = userId;
-
     try {
+      if (!data.patient) {
+        toast.error('Por favor seleccione un paciente');
+        return;
+      }
+      if (!data.filter) {
+        toast.error('Por favor seleccione un filtro');
+        return;
+      }
+      if (!data.startDate) {
+        toast.error('Por favor seleccione una fecha');
+        return;
+      }
+
+      data.attended = userId;
+
+      const submitData = {
+        ...data,
+        patient: data.patient._id || data.patient,
+        filter: data.filter._id || data.filter,
+      };
+
       if (editingWashing) {
         const updatedData = {
-          ...data,
-          patient: data.patient._id || data.patient,
-          filter: data.filter._id || data.filter,
-          integrityTest:
-            data.integrityTest === null ? null : Number(data.integrityTest),
+          ...submitData,
           startDate: data.startDate,
         };
 
@@ -149,7 +155,7 @@ const WashingCRUD: React.FC = () => {
           });
       } else {
         await axios
-          .post('/api/v1/washings', data)
+          .post('/api/v1/washings', submitData)
           .then(() => {
             toast.success('Lavado registrado correctamente');
           })
@@ -222,13 +228,6 @@ const WashingCRUD: React.FC = () => {
   const getSortIcon = (field: keyof Washing) => {
     if (sortField !== field) return '↕️';
     return sortDirection === 'asc' ? '↑' : '↓';
-  };
-
-  const adjustDateForTimezone = (date: string) => {
-    const d = new Date(date);
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 16);
   };
 
   return (

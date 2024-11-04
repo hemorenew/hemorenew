@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 import axios from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Login = () => {
@@ -12,6 +13,29 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const checkAuth = async () => {
+      try {
+        const response = await axios.get('/api/auth/user');
+        if (isSubscribed && response.data.id) {
+          router.push('/');
+        }
+      } catch (error) {
+        if (isSubscribed) {
+          console.log('Error al obtener el usuario:', error);
+        }
+      }
+    };
+
+    checkAuth();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +54,6 @@ const Login = () => {
 
   return (
     <div className='flex min-h-screen flex-col-reverse items-center justify-center gap-8 bg-gradient-to-br from-blue-50 to-white p-4 lg:flex-row lg:gap-12 xl:gap-24'>
-      {/* Info Section */}
       <div className='hidden w-full max-w-lg space-y-6 rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-xl lg:block lg:w-1/2'>
         <div className='space-y-4'>
           <img
@@ -63,16 +86,19 @@ const Login = () => {
         <h3 className='mb-6 text-center text-2xl font-bold text-gray-800 lg:text-start'>
           Iniciar Sesión
         </h3>
-        <form onSubmit={handleSubmit} className='space-y-6'>
+        <form onSubmit={handleSubmit} className='space-y-6' id='login-form'>
           <div>
             <label
               className='block text-sm font-medium text-gray-700'
-              htmlFor='user'
+              htmlFor='email'
             >
               Correo electrónico
             </label>
             <input
               type='email'
+              name='email'
+              id='email'
+              autoComplete='username'
               placeholder='usuario@ejemplo.com'
               className='mt-2 w-full rounded-lg border border-gray-300 px-4 py-2.5 transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
               value={user}
@@ -81,11 +107,17 @@ const Login = () => {
             />
           </div>
           <div className='relative'>
-            <label className='block text-sm font-medium text-gray-700'>
+            <label
+              className='block text-sm font-medium text-gray-700'
+              htmlFor='current-password'
+            >
               Contraseña
             </label>
             <input
               type={showPassword ? 'text' : 'password'}
+              name='current-password'
+              id='current-password'
+              autoComplete='current-password'
               placeholder='••••••••'
               className='mt-2 w-full rounded-lg border border-gray-300 px-4 py-2.5 transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
               value={password}

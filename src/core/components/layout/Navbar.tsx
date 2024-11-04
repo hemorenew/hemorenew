@@ -11,16 +11,11 @@ const Navbar: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.get('/api/auth/logout');
-      if (response.data.success) {
-        // Clear any client-side auth state
-        // For example, if you're using a context:
-        // setIsLoggedIn(false);
-        // setUserData({});
-        router.push('/login');
-      }
+      await axios.post('/api/auth/logout');
+
+      router.push('/login');
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Error during logout:', error);
     }
   };
 

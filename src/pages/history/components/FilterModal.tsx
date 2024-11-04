@@ -23,6 +23,19 @@ interface FilterModalProps {
 }
 
 const FilterModal: React.FC<FilterModalProps> = ({ onClose, data }) => {
+  const chartData = data || {
+    labels: [],
+    datasets: [
+      {
+        label: '',
+        data: [],
+        borderColor: '#000',
+        backgroundColor: '#000',
+        tension: 0.1,
+      },
+    ],
+  };
+
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2'>
       <div className='w-full rounded-lg bg-white p-3 shadow-xl sm:p-6 md:w-[90vw]'>
@@ -75,7 +88,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ onClose, data }) => {
                 },
               },
             }}
-            data={data}
+            data={chartData}
           />
         </div>
       </div>

@@ -13,6 +13,7 @@ export const useServerSideLogin = async (context: any) => {
   const sessionExpiry = user?.sessionExpiry || 0;
 
   if (!user || currentTime > sessionExpiry) {
+    req.session.destroy();
     return redirectToLogin;
   }
 
