@@ -20,7 +20,14 @@ export default withSession(
     if (!userDoc) {
       return res
         .status(400)
-        .json({ success: false, message: 'Invalid username or password' });
+        .json({ success: false, message: 'Usuario o contraseña incorrectos' });
+    }
+
+    if (userDoc.status === 'inactive') {
+      return res.status(403).json({
+        success: false,
+        message: 'Tu cuenta está inactiva. Contacta al administrador.',
+      });
     }
 
     const isMatch = await bcrypt.compare(password, userDoc.password);

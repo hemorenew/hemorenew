@@ -1,13 +1,14 @@
 import axios from 'axios';
 import Link from 'next/link';
 import router from 'next/router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
+  const [profession, setProfession] = useState('');
 
   const handleLogout = async () => {
     try {
@@ -18,6 +19,15 @@ const Navbar: React.FC = () => {
       console.error('Error during logout:', error);
     }
   };
+
+  useEffect(() => {
+    axios
+      .get('/api/auth/user')
+      .then((response) => {
+        setProfession(response.data.profession);
+      })
+      .catch((error) => console.error('Error fetching user data:', error));
+  }, []);
 
   return (
     <nav className='bg-gray-800'>
@@ -32,10 +42,20 @@ const Navbar: React.FC = () => {
           </div>
           <div className='hidden md:block'>
             <div className='ml-10 flex items-baseline space-x-4'>
-              <NavLink href='/patient'>Paciente</NavLink>
-              <NavLink href='/filter'>Filtro</NavLink>
-              <NavLink href='/washing'>Lavado</NavLink>
-              <NavLink href='/history'>Historial</NavLink>
+              {profession === 'admin' && (
+                <>
+                  <NavLink href='/user'>Gestión Usuarios</NavLink>
+                  <NavLink href='/history'>Historial</NavLink>
+                </>
+              )}
+              {profession !== 'admin' && (
+                <>
+                  <NavLink href='/patient'>Paciente</NavLink>
+                  <NavLink href='/filter'>Filtro</NavLink>
+                  <NavLink href='/washing'>Lavado</NavLink>
+                  <NavLink href='/history'>Historial</NavLink>
+                </>
+              )}
               <NavLink href='/profile'>Perfil</NavLink>
               <NavLink href='/login' onClick={handleLogout}>
                 Cerrar Sesión
@@ -57,18 +77,32 @@ const Navbar: React.FC = () => {
       {isOpen && (
         <div className='md:hidden'>
           <div className='space-y-1 px-2 pb-3 pt-2 sm:px-3'>
-            <NavLink href='/patient' mobile>
-              Paciente
-            </NavLink>
-            <NavLink href='/filter' mobile>
-              Filtro
-            </NavLink>
-            <NavLink href='/washing' mobile>
-              Lavado
-            </NavLink>
-            <NavLink href='/history' mobile>
-              Historial
-            </NavLink>
+            {profession === 'admin' && (
+              <>
+                <NavLink href='/user' mobile>
+                  Gestión Usuarios
+                </NavLink>
+                <NavLink href='/history' mobile>
+                  Historial
+                </NavLink>
+              </>
+            )}
+            {profession !== 'admin' && (
+              <>
+                <NavLink href='/patient' mobile>
+                  Paciente
+                </NavLink>
+                <NavLink href='/filter' mobile>
+                  Filtro
+                </NavLink>
+                <NavLink href='/washing' mobile>
+                  Lavado
+                </NavLink>
+                <NavLink href='/history' mobile>
+                  Historial
+                </NavLink>
+              </>
+            )}
             <NavLink href='/profile' mobile>
               Perfil
             </NavLink>

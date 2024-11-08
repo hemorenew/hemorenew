@@ -45,8 +45,8 @@ const Login = () => {
       if (response.data.id) {
         router.push('/');
       }
-    } catch (err) {
-      setError('Usuario o contraseña incorrectos');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al iniciar sesión');
     } finally {
       setIsSubmitting(false);
     }

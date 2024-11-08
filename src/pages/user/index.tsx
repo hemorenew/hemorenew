@@ -1,37 +1,20 @@
 import axios from 'axios';
+import { useServerSidePermission } from 'core/hooks/permission/useServerSidePermission';
+import withSession from 'core/lib/session';
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-
-export const professions = [
-  'Médico General',
-  'Médico Nefrologista',
-  'Lic. Enfermero',
-];
 
 interface User {
   _id: string;
   firstName: string;
   lastName: string;
-  ci: string;
   profession: string;
-  phone: string;
-  user: string;
-  password: string;
   status: string;
 }
 
 const UserCRUD: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-
-  const [showPassword, setShowPassword] = useState(false);
-  const { register, handleSubmit, reset, setValue, watch } = useForm<
-    User & { confirmPassword: string }
-  >();
-
-  // Add these lines to watch the password fields
-  const password = watch('password');
-  const confirmPassword = watch('confirmPassword');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -46,183 +29,94 @@ const UserCRUD: React.FC = () => {
     }
   };
 
-  const generateUsername = (
-    firstName: string,
-    lastName: string,
-    ci: string
-  ) => {
-    const initial = firstName.charAt(0).toLowerCase();
-    const surname = lastName.split(' ')[0].toLowerCase();
-    const ciLastFour = ci.slice(-4);
-    return `${initial}${surname}${ciLastFour}`;
+  const toggleUserStatus = async (user: User) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
   };
 
-  const onSubmit = async (data: User & { confirmPassword: string }) => {
-    if (data.password !== data.confirmPassword) {
-      alert("Passwords don't match");
-      return;
-    }
+  const handleStatusChange = async () => {
+    if (!selectedUser) return;
 
     try {
-      const generatedUsername = generateUsername(
-        data.firstName,
-        data.lastName,
-        data.ci
-      );
-      const userData = { ...data, user: generatedUsername };
-
-      if (editingUser) {
-        await axios.put(`/api/v1/users/${editingUser._id}`, userData);
-      } else {
-        await axios.post('/api/v1/users', userData);
-      }
+      const newStatus =
+        selectedUser.status === 'active' ? 'inactive' : 'active';
+      await axios.put(`/api/v1/users/${selectedUser._id}`, {
+        ...selectedUser,
+        status: newStatus,
+      });
       fetchUsers();
-      reset();
-      setEditingUser(null);
+      setIsModalOpen(false);
     } catch (error) {
-      console.error('Error saving user:', error);
+      console.error('Error updating user status:', error);
     }
-  };
-
-  const deleteUser = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await axios.delete(`/api/v1/users/${id}`);
-        fetchUsers();
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      }
-    }
-  };
-
-  const editUser = (user: User) => {
-    setEditingUser(user);
-    Object.keys(user).forEach((key) => {
-      if (key !== 'password') {
-        setValue(key as keyof User, user[key as keyof User]);
-      }
-    });
   };
 
   return (
-    <div className='h-full min-h-max bg-gray-100 py-8'>
+    <div className='min-h-screen bg-gray-100 py-8'>
       <div className='container mx-auto px-4'>
         <h1 className='mb-8 text-2xl font-bold text-gray-800'>
-          Gestión de Usuarios
+          Estado de Usuarios
         </h1>
 
-        <div className='grid gap-8 lg:grid-cols-3'>
-          <div className='col-span-1 rounded-lg bg-white p-6 shadow-md'>
-            <h2 className='mb-4 text-lg font-semibold'>
-              {editingUser ? 'Editar Usuario' : 'Agregar Nuevo Usuario'}
-            </h2>
-            <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
-              <input
-                {...register('firstName')}
-                placeholder='Nombre'
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-              />
-              <input
-                {...register('lastName')}
-                placeholder='Apellido'
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-              />
-              <input
-                {...register('ci')}
-                placeholder='Cédula de Identidad'
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-              />
-              <select
-                {...register('profession')}
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-              >
-                <option value=''>Seleccione una profesión</option>
-                {professions.map((profession) => (
-                  <option key={profession} value={profession}>
-                    {profession}
-                  </option>
-                ))}
-              </select>
-              <input
-                {...register('phone')}
-                placeholder='Teléfono'
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-              />
-              <input
-                {...register('password')}
-                type={showPassword ? 'text' : 'password'}
-                placeholder='Contraseña'
-                value={password}
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-              />
-              <input
-                {...register('confirmPassword')}
-                type={showPassword ? 'text' : 'password'}
-                placeholder='Confirmar Contraseña'
-                value={confirmPassword}
-                className='w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500'
-              />
-              <div className='flex items-center'>
-                <input
-                  type='checkbox'
-                  id='showPassword'
-                  checked={showPassword}
-                  onChange={() => setShowPassword(!showPassword)}
-                  className='mr-2'
-                />
-                <label htmlFor='showPassword'>Mostrar contraseña</label>
+        <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4'>
+          {users.map((user) => (
+            <div key={user._id} className='rounded-lg bg-white p-6 shadow-md'>
+              <div className='flex flex-col items-center'>
+                <div className='flex h-20 w-20 items-center justify-center rounded-full bg-gray-200'>
+                  <span className='text-2xl font-bold text-gray-600'>
+                    {user.firstName.charAt(0)}
+                    {user.lastName.charAt(0)}
+                  </span>
+                </div>
+                <h3 className='mt-4 text-center text-lg font-semibold'>
+                  {user.firstName} {user.lastName}
+                </h3>
+                <p className='text-gray-600'>{user.profession}</p>
+                <button
+                  onClick={() => toggleUserStatus(user)}
+                  className={`mt-4 w-full rounded-md px-4 py-2 text-white transition ${
+                    user.status === 'active'
+                      ? 'bg-green-500 hover:bg-green-600'
+                      : 'bg-red-500 hover:bg-red-600'
+                  }`}
+                >
+                  {user.status === 'active' ? 'Activo' : 'Inactivo'}
+                </button>
               </div>
-              <button
-                type='submit'
-                className='w-full rounded-md bg-blue-500 py-2 px-4 text-white transition duration-300 hover:bg-blue-600'
-              >
-                {editingUser ? 'Actualizar Usuario' : 'Agregar Usuario'}
-              </button>
-            </form>
-          </div>
-
-          <div className='col-span-2 overflow-x-auto rounded-lg bg-white p-6 shadow-md'>
-            <h2 className='mb-4 text-lg font-semibold'>Lista de Usuarios</h2>
-            <table className='w-full'>
-              <thead>
-                <tr className='bg-gray-100'>
-                  <th className='px-4 py-2 text-left'>Nombre</th>
-                  <th className='px-4 py-2 text-left'>CI</th>
-                  <th className='px-4 py-2 text-left'>Profesión</th>
-                  <th className='px-4 py-2 text-left'>Usuario</th>
-                  <th className='px-4 py-2 text-left'>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user._id} className='border-b'>
-                    <td className='px-4 py-2'>{`${user.firstName} ${user.lastName}`}</td>
-                    <td className='px-4 py-2'>{user.ci}</td>
-                    <td className='px-4 py-2'>{user.profession}</td>
-                    <td className='px-4 py-2'>{user.user}</td>
-                    <td className='px-4 py-2'>
-                      <button
-                        onClick={() => editUser(user)}
-                        className='mr-2 rounded-md bg-yellow-500 px-2 py-1 text-white transition duration-300 hover:bg-yellow-600'
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => deleteUser(user._id)}
-                        className='rounded-md bg-red-500 px-2 py-1 text-white transition duration-300 hover:bg-red-600'
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            </div>
+          ))}
         </div>
       </div>
+
+      {isModalOpen && selectedUser && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
+          <div className='rounded-lg bg-white p-8'>
+            <h3 className='mb-4 text-lg font-semibold'>
+              {selectedUser.status === 'active'
+                ? '¿Desea dar de baja al usuario?'
+                : '¿Desea dar de alta al usuario?'}
+            </h3>
+            <div className='flex justify-end gap-4'>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className='rounded-md bg-gray-500 px-4 py-2 text-white transition hover:bg-gray-600'
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleStatusChange}
+                className='rounded-md bg-blue-500 px-4 py-2 text-white transition hover:bg-blue-600'
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+export const getServerSideProps = withSession(useServerSidePermission);
 
 export default UserCRUD;
