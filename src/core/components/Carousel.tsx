@@ -13,9 +13,10 @@ interface CarouselItem {
 
 interface CarouselProps {
   onStart: () => void;
+  user: any;
 }
 
-const Carousel: React.FC<CarouselProps> = ({ onStart }) => {
+const Carousel: React.FC<CarouselProps> = ({ onStart, user }) => {
   const [carouselItems, setCarouselItems] = useState<CarouselItem[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const secondsAutoChangeImage = 10000;
@@ -116,12 +117,29 @@ const Carousel: React.FC<CarouselProps> = ({ onStart }) => {
                   <p className='mb-8 max-w-3xl text-center text-sm text-white/80 sm:text-base md:text-lg lg:text-xl'>
                     {carouselItems[currentImageIndex].details}
                   </p>
-                  <button
-                    onClick={onStart}
-                    className='mt-4 rounded-lg bg-blue-600 px-8 py-3 text-lg font-semibold text-white transition hover:bg-blue-700'
-                  >
-                    Empezar
-                  </button>
+                  {user.profession !== 'admin' ? (
+                    <button
+                      onClick={onStart}
+                      className='mt-4 rounded-lg bg-blue-600 px-8 py-3 text-lg font-semibold text-white transition hover:bg-blue-700'
+                    >
+                      Empezar
+                    </button>
+                  ) : (
+                    <div className='flex gap-4'>
+                      <button
+                        onClick={() => (window.location.href = '/user')}
+                        className='mt-4 rounded-lg bg-blue-600 px-8 py-3 text-lg font-semibold text-white transition hover:bg-blue-700'
+                      >
+                        Gestión de usuarios
+                      </button>
+                      <button
+                        onClick={() => (window.location.href = '/history')}
+                        className='mt-4 rounded-lg bg-green-600 px-8 py-3 text-lg font-semibold text-white transition hover:bg-green-700'
+                      >
+                        Ver Historial
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </>

@@ -57,14 +57,14 @@ const Login = () => {
     <div className='flex min-h-screen flex-col-reverse items-center justify-center gap-8 bg-gradient-to-br from-blue-50 to-white p-4 lg:flex-row lg:gap-12 xl:gap-24'>
       <div className='hidden w-full max-w-lg space-y-6 rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-xl lg:block lg:w-1/2'>
         <div className='space-y-4'>
-          <img
-            src='images/logo.png'
-            alt='HemoRenew Logo'
-            className='mx-auto h-16 w-auto'
-          />
-          <h1 className='text-center text-3xl font-bold text-gray-800'>
-            Sistema HemoRenew
+          <h1 className='text-center text-3xl font-bold text-blue-900'>
+            Sistema
           </h1>
+          <img
+            src='/icons/icon-256x256.png'
+            alt='HemoRenew Logo'
+            className='h-13 mx-auto w-auto'
+          />
           <h2 className='text-center text-xl font-medium text-blue-600'>
             Reprocesamiento de Filtros
           </h2>
@@ -79,9 +79,9 @@ const Login = () => {
       <div className='w-full max-w-md rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-xl sm:p-10'>
         <div className='mb-8 lg:hidden'>
           <img
-            src='images/logo.png'
+            src='/icons/icon-256x256.png'
             alt='HemoRenew Logo'
-            className='mx-auto h-12 w-auto'
+            className='h-13 mx-auto w-auto'
           />
         </div>
         <h3 className='mb-6 text-center text-2xl font-bold text-gray-800 lg:text-start'>
@@ -133,9 +133,9 @@ const Login = () => {
               {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
             </button>
           </div>
-          <div className='flex flex-col gap-4 pt-2 sm:flex-row sm:items-center sm:justify-between'>
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between'>
             <button
-              className='w-full rounded-lg bg-blue-600 px-6 py-2.5 text-white transition duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 sm:w-auto'
+              className='w-full rounded-lg bg-blue-600 px-4 py-2 text-white transition duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 sm:w-auto'
               disabled={isSubmitting}
             >
               {isSubmitting ? (

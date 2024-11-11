@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import axios from 'axios';
 import Link from 'next/link';
 import router from 'next/router';
@@ -34,7 +35,17 @@ const Navbar: React.FC = () => {
       <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
         <div className='flex h-16 items-center justify-between'>
           <div className='flex items-center'>
-            <div className='flex-shrink-0'>
+            <div
+              className='flex items-center gap-2 hover:cursor-pointer'
+              onClick={() => router.push('/')}
+            >
+              <div className='rounded-full bg-white p-1'>
+                <img
+                  src='/icons/icon-256x256.png'
+                  alt='HemoRenew'
+                  className='h-8 w-8'
+                />
+              </div>
               <Link href='/' className='text-xl font-bold text-white'>
                 HemoRenew
               </Link>

@@ -24,7 +24,7 @@ const Index = () => {
   if (!showMainContent) {
     return (
       <>
-        <Carousel onStart={() => setShowMainContent(true)} />
+        <Carousel onStart={() => setShowMainContent(true)} user={user} />
       </>
     );
   }
