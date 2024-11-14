@@ -1,0 +1,198 @@
+//electrovalvulas
+#define vc 23
+#define vasin 22
+#define vasout 21
+#define vve 19
+#define vprob 18
+#define vvs 5
+#define vad 4
+#define vvacio 2
+#define lrojo 14
+#define lverde 27
+
+//variables
+char sw=0;
+void setup() 
+{
+  delay(1000);
+  Serial2.begin(115200);
+  pinMode(vc, OUTPUT);
+  pinMode(vasin, OUTPUT);
+  pinMode(vasout, OUTPUT);
+  pinMode(vve, OUTPUT);
+  pinMode(vprob, OUTPUT);
+  pinMode(vvs, OUTPUT);
+  pinMode(vad, OUTPUT);
+  pinMode(vvacio, OUTPUT);
+  pinMode(lrojo, OUTPUT);
+  pinMode(lverde, OUTPUT);
+  digitalWrite(vc,1);
+  digitalWrite(vasin,1);
+  digitalWrite(vasout,1);
+  digitalWrite(vve,1);
+  digitalWrite(vprob,1);
+  digitalWrite(vvs,1);
+  digitalWrite(vad,1);
+  digitalWrite(vvacio,1);
+  digitalWrite(lrojo,0);
+  digitalWrite(lverde,0);
+}
+
+void loop() 
+{
+  
+  if(Serial2.available())
+  {
+    char x=Serial2.read();
+    switch(x)
+    {
+      case 'a'://lavado sanguineo
+        delay(100);
+        digitalWrite(lverde,1);
+        digitalWrite(vasin,0);
+        delay(200);
+        digitalWrite(vvs,0);
+        break;
+      case 'b'://dializado
+        delay(100);
+        digitalWrite(vasin,1);
+        delay(200);
+        digitalWrite(vvs,1);
+        delay(200);
+        digitalWrite(vve,0);
+        delay(200);
+        digitalWrite(vad,0);
+        break;
+      case 'c'://ultrafiltracion
+        delay(200);
+        digitalWrite(vad,1);
+        delay(200);
+        digitalWrite(vasout,0);
+        delay(200);
+        digitalWrite(vve,0);
+        delay(200);
+        digitalWrite(vvs,0);
+        break;
+      case 'd'://integridad
+        delay(200);
+        digitalWrite(vve,1);
+        delay(100);
+        digitalWrite(vasout,1);
+        delay(200);
+        digitalWrite(vc,0);
+        delay(200);
+        digitalWrite(vad,0);
+        break;
+      case 'e'://aclarado SANGUINEO
+        delay(200);
+        digitalWrite(vve,1);
+        delay(100);
+        digitalWrite(vad,1);
+        delay(100);
+        digitalWrite(vc,1);
+        delay(200);
+        digitalWrite(vasin,0);
+        delay(200);
+        digitalWrite(vvs,0);
+        break;
+      case 'f':
+        digitalWrite(lrojo,1);
+        break;
+      case 'g'://aclarado dializado
+        delay(200);
+        digitalWrite(vasin,1);
+        delay(100);
+        digitalWrite(vvs,1);
+        delay(200);
+        digitalWrite(vve,0);
+        delay(200);
+        digitalWrite(vad,0);
+        break;
+      case 'h'://VOLUMEN RESIDUAL
+        delay(200);
+        digitalWrite(lrojo,0);
+        digitalWrite(vve,1);
+        delay(100);
+        digitalWrite(vad,1);
+        delay(200);
+        digitalWrite(vprob,0);
+        break;
+      case 'i'://vaciado de filtro
+        delay(200);
+        digitalWrite(vprob,1);
+        delay(200);
+        digitalWrite(vvacio,0);
+        break;
+      case 'j'://llenado desinfectante
+        delay(200);
+        digitalWrite(vvacio,1);
+        delay(200);
+        digitalWrite(vasin,0);
+        delay(200);
+        digitalWrite(vvs,0);
+        break;
+      case 'k'://fin
+        delay(200);
+        digitalWrite(vasin,1);
+        delay(100);
+        digitalWrite(vasin,1);
+        delay(200);
+        digitalWrite(vvs,1);
+        digitalWrite(lverde,0);
+        digitalWrite(lrojo,0);
+        break;
+      case 'l'://desinfeccion
+        delay(200);
+        digitalWrite(vve,0);
+        delay(200);
+        digitalWrite(vad,0);
+        break;
+      case 'm'://desinfeccion
+        delay(200);
+        digitalWrite(vve,1);
+        delay(100);
+        digitalWrite(vad,1);
+        delay(200);
+        digitalWrite(vasin,0);
+        delay(200);
+        digitalWrite(vvs,0);
+        break;
+      case 'n'://desinfeccion
+        delay(200);
+        digitalWrite(vasin,1);
+        delay(100);
+        digitalWrite(vvs,1);
+        break;
+      case 'o'://desinfeccion
+        delay(200);
+        digitalWrite(vasin,0);
+        delay(200);
+        digitalWrite(vvs,0);
+        break;
+      case 'p'://desinfeccion
+        delay(200);
+        digitalWrite(vasin,1);
+        delay(100);
+        digitalWrite(vvs,1);
+        delay(200);
+        digitalWrite(vve,0);
+        delay(200);
+        digitalWrite(vad,0);
+        break;
+      case 'q'://desinfeccion
+        delay(200);
+        digitalWrite(vad,1);
+        delay(100);
+        digitalWrite(vve,1);
+        break;
+      case 'r'://desinfeccion
+        delay(200);
+        digitalWrite(lverde,1);
+        break;
+      case 's'://desinfeccion
+        delay(200);
+        digitalWrite(lverde,0);
+        break;
+    }
+  }
+}
