@@ -9,9 +9,9 @@
 #include "OneWire.h"
 #include "DallasTemperature.h"
 #include <Ticker.h>
-#include <ArduinoJson.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoHttpClient.h>
+#include <ArduinoJson.h>
 #include <time.h>
 //sensores
 #define boton1 39
@@ -72,12 +72,17 @@ String inputMessage;
 int k,seg=0;
 char sw=0,sw2=0;
 
-// Configuración del servidor
-const char* apiServerName = "https://hemorenew.vercel.app";
-const int serverPort = 80;
-
 WiFiClientSecure wifiClient;
-HttpClient http(wifiClient, apiServerName, serverPort);
+HttpClient httpClient(wifiClient, "hemorenew.vercel.app", 443);
+
+String getCurrentTime() {
+  time_t now;
+  time(&now);
+  now += -4 * 3600; // UTC-4 for Bolivia
+  char buf[30];
+  strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S.000Z", gmtime(&now));
+  return String(buf);
+}
 
 void setup() 
 {
@@ -135,9 +140,8 @@ void setup()
   delay(1000);
   lcd.clear();
   sensor.attach(1,limpiar);
-
-  wifiClient.setInsecure(); // Para HTTPS sin verificación
-  configTime(-4 * 3600, 0, "pool.ntp.org", "time.nist.gov"); // Configurar zona horaria de Bolivia (UTC-4) y servidores NTP
+  wifiClient.setInsecure();
+  configTime(0, 0, "pool.ntp.org");
 }
 
 void loop() 
@@ -213,12 +217,12 @@ void loop()
         delay(1000);
         if(seg%5==0)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
           seg=0;
         }
         if(temp>35 && seg>3)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
           digitalWrite(bcir,1);
           delay(300);
           digitalWrite(resistencia, 1);
@@ -273,11 +277,11 @@ void loop()
         delay(1000);
         if(seg%5==0)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
         }
         if(seg>59)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
           NumPulsos=0;
           seg=0;
           Serial2.print("b");
@@ -302,11 +306,11 @@ void loop()
         delay(1000);
         if(seg%5==0)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
         }
         if(seg>60)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
           NumPulsos=0;
           seg=0;
           Serial2.print("c");
@@ -331,11 +335,11 @@ void loop()
         delay(1000);
         if(seg%5==0)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
         }
         if(seg>240)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
           seg=0;
           Serial2.print("d");
           sw2=5;
@@ -359,7 +363,7 @@ void loop()
         delay(1000);
         if(seg%5==0)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
         }
         if(seg>59)
         {
@@ -372,7 +376,7 @@ void loop()
           lcd.clear();
           if(color=="ROJO")
           {
-            enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+            enviardatos(temp, LxM, dist, color);
             lcd.setCursor(0,0);
             lcd.print("NO PASO TEST");
             Serial2.print("f");
@@ -386,7 +390,7 @@ void loop()
           }
           else
           {
-            enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+            enviardatos(temp, LxM, dist, color);
             lcd.setCursor(0,0);
             lcd.print("PASO TEST");
             lcd.setCursor(0,1);
@@ -413,11 +417,11 @@ void loop()
         delay(1000);
         if(seg%5==0)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
         }
         if(seg>90)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
           seg=0;
           Serial2.print("g");
           sw2=7;
@@ -441,11 +445,11 @@ void loop()
         delay(1000);
         if(seg%5==0)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
         }
         if(seg>90)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
           seg=0;
           Serial2.print("h");
           sw2=8;
@@ -472,11 +476,11 @@ void loop()
         delay(1000);
         if(seg%5==0)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
         }
         if(seg>120)
         {
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
           seg=0;
           Serial2.print("i");
           sw2=9;
@@ -527,7 +531,7 @@ void loop()
           lcd.print("PROCESO");
           sw=0;
           sw2=0;
-          enviardatos("T="+String(temp)+"&F="+String(LxM)+"&N="+String(dist)+"&C="+color+"",apiServerName);
+          enviardatos(temp, LxM, dist, color);
           delay(3000);
         }
       }
@@ -614,42 +618,63 @@ void loop()
   }
 }
 
-void enviardatos(String datos, String servidor) {
-  if(WiFi.status()== WL_CONNECTED) {
-    // Obtener la fecha y hora actual solo una vez
-    struct tm timeinfo;
-    if(!getLocalTime(&timeinfo)){
-      Serial.println("Failed to obtain time");
-      return;
-    }
-    char timeString[64];
-    strftime(timeString, sizeof(timeString), "%Y-%m-%dT%H:%M:%S.000Z", &timeinfo);
+void enviardatos(float temp, float flujo, int nivel, String color) {
+  String currentTime = getCurrentTime();
+  
+  // Temperature
+  DynamicJsonDocument tempDoc(1024);
+  tempDoc["name"] = "prototipo1";
+  tempDoc["value"] = temp;
+  tempDoc["date"] = currentTime;
+  
+  String tempPayload;
+  serializeJson(tempDoc, tempPayload);
+  sendRequest("/api/v1/temperatures", tempPayload);
+  delay(100);
 
-    // Función para enviar datos JSON a un endpoint específico
-    auto sendJson = [&](const char* endpoint, const JsonDocument& doc) {
-      String json;
-      serializeJson(doc, json);
-      http.beginRequest();
-      http.post(String("https://hemorenew.vercel.app/api/v1/") + endpoint);
-      http.sendHeader("Content-Type", "application/json");
-      http.sendHeader("Content-Length", json.length());
-      http.beginBody();
-      http.print(json);
-      http.endRequest();
-    };
+  // Flow
+  DynamicJsonDocument flowDoc(1024);
+  flowDoc["name"] = "prototipo1";
+  flowDoc["value"] = flujo;
+  flowDoc["date"] = currentTime;
+  
+  String flowPayload;
+  serializeJson(flowDoc, flowPayload);
+  sendRequest("/api/v1/flows", flowPayload);
+  delay(100);
 
-    // Crear y enviar datos de temperatura, flujo, color y ultrasonido
-    StaticJsonDocument<200> tempDoc, flowDoc, colorDoc, ultraDoc;
-    tempDoc["name"] = "Temperatura"; tempDoc["value"] = temp; tempDoc["date"] = timeString;
-    flowDoc["name"] = "Flujo"; flowDoc["value"] = LxM; flowDoc["date"] = timeString;
-    colorDoc["name"] = "Color"; colorDoc["value"] = color; colorDoc["date"] = timeString;
-    ultraDoc["name"] = "Ultrasonido"; ultraDoc["value"] = dist; ultraDoc["date"] = timeString;
+  // Color
+  DynamicJsonDocument colorDoc(1024);
+  colorDoc["name"] = "prototipo1";
+  colorDoc["value"] = color;
+  colorDoc["date"] = currentTime;
+  
+  String colorPayload;
+  serializeJson(colorDoc, colorPayload);
+  sendRequest("/api/v1/colors", colorPayload);
+  delay(100);
 
-    sendJson("temperatures", tempDoc);
-    sendJson("flows", flowDoc);
-    sendJson("colors", colorDoc);
-    sendJson("ultrasounds", ultraDoc);
-  }
+  // Ultrasound
+  DynamicJsonDocument ultraDoc(1024);
+  ultraDoc["name"] = "prototipo1";
+  ultraDoc["value"] = nivel;
+  ultraDoc["date"] = currentTime;
+  
+  String ultraPayload;
+  serializeJson(ultraDoc, ultraPayload);
+  sendRequest("/api/v1/ultrasounds", ultraPayload);
+}
+
+void sendRequest(const char* endpoint, String payload) {
+  httpClient.beginRequest();
+  httpClient.post(endpoint);
+  httpClient.sendHeader("Content-Type", "application/json");
+  httpClient.sendHeader("Content-Length", payload.length());
+  httpClient.beginBody();
+  httpClient.print(payload);
+  httpClient.endRequest();
+
+  httpClient.stop();
 }
 
 void colores()
