@@ -269,8 +269,8 @@ const FilterCRUD: React.FC = () => {
           Gestión de Filtros
         </h1>
 
-        <div className='grid gap-8 lg:grid-cols-3'>
-          <div className='col-span-1 h-fit rounded-lg bg-white p-6 shadow-md'>
+        <div className='flex flex-col gap-8 md:grid md:grid-cols-3 md:gap-8'>
+          <div className='h-fit w-full rounded-lg bg-white p-6 shadow-md'>
             <h2 className='mb-4 text-lg font-semibold'>
               {editingFilter
                 ? 'Editar Filtro'
