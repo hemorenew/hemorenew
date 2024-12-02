@@ -29,28 +29,36 @@ ChartJS.register(
 interface WashingModalProps {
   washing: any;
   onClose: () => void;
+  data: {
+    temperature: { value: any; date: string }[];
+    waterLevel: { value: any; date: string }[];
+    bloodLeak: { value: any; date: string }[];
+    flowRate: { value: any; date: string }[];
+  };
 }
 
-const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
-  const generateLineData = (
-    baseValue: number,
-    variance: number,
-    length: number
-  ) => {
-    return Array.from({ length }, (_, i) => {
-      const change = (Math.random() - 0.5) * variance;
-      return Math.max(0, baseValue + change * (i + 1));
+const WashingModal: React.FC<WashingModalProps> = ({ onClose, data }) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    date.setHours(date.getHours() + 4);
+    return date.toLocaleString('es-UY', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
     });
   };
 
-  const labels = Array.from({ length: 20 }, (_, i) => `${i * 2}min`);
+  const lastWaterLevel =
+    data.waterLevel[data.waterLevel.length - 1]?.value || 0;
+  const residualVolume = Math.PI * Math.pow(2, 2) * lastWaterLevel;
 
   const temperatureData = {
-    labels,
+    labels: data.temperature.map((t) => formatDate(t.date)),
     datasets: [
       {
         label: 'Temperatura (°C)',
-        data: generateLineData(20, 2, 20),
+        data: data.temperature.map((t) => t.value),
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
         tension: 0.3,
@@ -59,11 +67,13 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
   };
 
   const waterLevelData = {
-    labels,
+    labels: data.waterLevel.map((w) => formatDate(w.date)),
     datasets: [
       {
-        label: 'Nivel de Agua (L)',
-        data: generateLineData(30, 5, 20),
+        label: `Nivel de Agua (cm) - Volumen Residual: ${residualVolume.toFixed(
+          2
+        )}ml`,
+        data: data.waterLevel.map((w) => w.value),
         backgroundColor: 'rgba(53, 162, 235, 0.5)',
         borderColor: 'rgb(53, 162, 235)',
         borderWidth: 1,
@@ -71,33 +81,26 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
     ],
   };
 
+  const hasBloodLeak = data.bloodLeak.some((b) => b.value === 'PURPURA');
   const pressureData = {
     labels: ['Sangre Detectada', 'Sangre No Detectada'],
     datasets: [
       {
-        label: 'Presión',
-        data: [1, 0],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.5)',
-          'rgba(54, 162, 235, 0.5)',
-          'rgba(255, 206, 86, 0.5)',
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-        ],
+        label: 'Estado',
+        data: [hasBloodLeak ? 1 : 0, hasBloodLeak ? 0 : 1],
+        backgroundColor: ['rgba(255, 99, 132, 0.5)', 'rgba(54, 162, 235, 0.5)'],
+        borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
         borderWidth: 1,
       },
     ],
   };
 
-  const rpmData = {
-    labels,
+  const flowRateData = {
+    labels: data.flowRate.map((f) => formatDate(f.date)),
     datasets: [
       {
-        label: 'Sensor de flujo',
-        data: generateLineData(600, 200, 20),
+        label: 'Flujo (ml/min)',
+        data: data.flowRate.map((f) => f.value),
         borderColor: 'rgb(153, 102, 255)',
         backgroundColor: 'rgba(153, 102, 255, 0.5)',
         tension: 0.3,
@@ -138,7 +141,7 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Litros',
+          text: 'Centímetros',
         },
       },
     },
@@ -190,7 +193,7 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
             options={lineOptions}
           />
           <ChartCard
-            title='Nivel de Agua'
+            title='Sensor de ultrasonido'
             type='bar'
             data={waterLevelData}
             options={barOptions}
@@ -204,7 +207,7 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose }) => {
           <ChartCard
             title='Sensor de flujo'
             type='line'
-            data={rpmData}
+            data={flowRateData}
             options={lineOptions}
           />
         </div>

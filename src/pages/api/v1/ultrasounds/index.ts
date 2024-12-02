@@ -11,6 +11,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (method) {
     case 'GET':
       try {
+        const { startDate } = req.query;
+
+        if (startDate) {
+          const start = new Date(startDate as string);
+          const end = new Date(start.getTime() + 20 * 60000); // 20 minutos en milisegundos
+
+          const ultrasounds = await Ultrasound.find({
+            date: {
+              $gte: start,
+              $lte: end,
+            },
+          });
+          return res.status(200).json(ultrasounds);
+        }
+
+        // Si no hay startDate, devuelve todos los ultrasounds (comportamiento original)
         const ultrasounds = await Ultrasound.find({});
         return res.status(200).json(ultrasounds);
       } catch (error: any) {

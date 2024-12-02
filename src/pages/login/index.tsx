@@ -58,7 +58,7 @@ const Login = () => {
       <div className='hidden w-full max-w-lg space-y-6 rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-xl lg:block lg:w-1/2'>
         <div className='space-y-4'>
           <h1 className='text-center text-3xl font-bold text-blue-900'>
-            Sistema
+            Sistema HemoRenew
           </h1>
           <img
             src='/icons/icon-256x256.png'

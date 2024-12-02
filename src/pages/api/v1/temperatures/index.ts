@@ -11,6 +11,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (method) {
     case 'GET':
       try {
+        const { startDate } = req.query;
+
+        if (startDate) {
+          const start = new Date(startDate as string);
+          const end = new Date(start.getTime() + 20 * 60000); // 20 minutos en milisegundos
+
+          const temperatures = await Temperature.find({
+            date: {
+              $gte: start,
+              $lte: end,
+            },
+          });
+          return res.status(200).json(temperatures);
+        }
+
+        // Si no hay startDate, devuelve todas las temperaturas (comportamiento original)
         const temperatures = await Temperature.find({});
         return res.status(200).json(temperatures);
       } catch (error: any) {

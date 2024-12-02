@@ -2,13 +2,6 @@ import React from 'react';
 import { Line } from 'react-chartjs-2';
 
 interface FilterModalProps {
-  filter: {
-    brand: string;
-    model: string;
-    firstUse: Date;
-    status: string;
-  };
-  count: number;
   onClose: () => void;
   data: {
     labels: string[];

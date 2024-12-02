@@ -33,8 +33,12 @@ interface Washing {
     firstName: string;
     lastName: string;
   };
-  residualVolume: number;
-  integrityTest: number;
+  residualVolume: any;
+  integrityTest: any;
+  temperature: any[];
+  waterLevel: any[];
+  bloodLeak: any[];
+  flowRate: any[];
 }
 
 interface FilterUsage {
@@ -63,8 +67,16 @@ const HistoryPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [groupByFilter, setGroupByFilter] = useState(false);
   const [selectedFilterModal, setSelectedFilterModal] = useState<{
-    filter: FilterUsage['filter'];
-    count: number;
+    data: {
+      labels: string[];
+      datasets: {
+        label: string;
+        data: number[];
+        borderColor: string;
+        backgroundColor: string;
+        tension: number;
+      }[];
+    };
   } | null>(null);
 
   useEffect(() => {
@@ -163,12 +175,38 @@ const HistoryPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleString('es-UY', { timeZone: 'UTC' });
   };
 
-  const handleWashingClick = (washing: Washing) => {
-    setSelectedWashing(washing);
-    setIsModalOpen(true);
+  const handleWashingClick = async (washing: Washing) => {
+    try {
+      const startDate = washing.startDate;
+      const params = new URLSearchParams({ startDate });
+
+      const [colors, flows, temperatures, ultrasounds] = await Promise.all([
+        axios.get(`/api/v1/colors?${params}`),
+        axios.get(`/api/v1/flows?${params}`),
+        axios.get(`/api/v1/temperatures?${params}`),
+        axios.get(`/api/v1/ultrasounds?${params}`),
+      ]);
+
+      const processedUltrasoundData = ultrasounds.data.map((u: any) => ({
+        value: Math.max(0, 19 - (u.value - 1.7)),
+        date: u.date,
+      }));
+
+      setSelectedWashing({
+        ...washing,
+        temperature: temperatures.data,
+        waterLevel: processedUltrasoundData,
+        bloodLeak: colors.data,
+        flowRate: flows.data,
+      });
+
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching sensor data:', error);
+    }
   };
 
   const getSortedWashings = () => {
@@ -202,30 +240,60 @@ const HistoryPage: React.FC = () => {
     }
   };
 
-  const handleFilterClick = (filter: FilterUsage) => {
-    setSelectedFilterModal(filter);
+  const handleFilterClick = async (filter: FilterUsage) => {
+    const filterWashings = patientWashings.filter(
+      (w) =>
+        w.filter.brand === filter.filter.brand &&
+        w.filter.model === filter.filter.model
+    );
+
+    // Get the most recent washing for this filter
+    const mostRecentWashing = filterWashings.sort(
+      (a, b) =>
+        new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+    )[0];
+
+    if (mostRecentWashing) {
+      await getFilterWashingData(mostRecentWashing);
+    }
   };
 
-  const getFilterWashingData = (filterId: string) => {
-    const washings = patientWashings
-      .filter((w) => `${w.filter.brand}-${w.filter.model}` === `${filterId}`)
-      .sort(
-        (a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-      );
+  const getFilterWashingData = async (washing: Washing) => {
+    try {
+      const startDate = washing.startDate;
+      const params = new URLSearchParams({ startDate });
 
-    return {
-      labels: washings.map((w) => formatDate(w.startDate)),
-      datasets: [
-        {
-          label: 'Volumen Residual (ml)',
-          data: washings.map((w) => w.residualVolume),
-          borderColor: 'rgb(53, 162, 235)',
-          backgroundColor: 'rgba(53, 162, 235, 0.5)',
-          tension: 0.3,
+      const [ultrasounds] = await Promise.all([
+        axios.get(`/api/v1/ultrasounds?${params}`),
+      ]);
+
+      const processedUltrasoundData = ultrasounds.data.map((u: any) => ({
+        value: Math.max(0, 19 - (u.value - 1.7)),
+        date: u.date,
+      }));
+
+      const lastUltrasoundValue =
+        processedUltrasoundData[processedUltrasoundData.length - 1]?.value || 0;
+
+      setSelectedFilterModal({
+        data: {
+          labels: processedUltrasoundData.map((w: any) => formatDate(w.date)),
+          datasets: [
+            {
+              label: `Volumen Residual (ml) - Ultimo valor: ${lastUltrasoundValue}`,
+              data: processedUltrasoundData.map((w: any) => w.value),
+              borderColor: 'rgb(53, 162, 235)',
+              backgroundColor: 'rgba(53, 162, 235, 0.5)',
+              tension: 0.3,
+            },
+          ],
         },
-      ],
-    };
+      });
+
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching sensor data:', error);
+    }
   };
 
   return (
@@ -464,17 +532,19 @@ const HistoryPage: React.FC = () => {
         <WashingModal
           washing={selectedWashing}
           onClose={() => setIsModalOpen(false)}
+          data={{
+            temperature: selectedWashing.temperature || [],
+            waterLevel: selectedWashing.waterLevel || [],
+            bloodLeak: selectedWashing.bloodLeak || false,
+            flowRate: selectedWashing.flowRate || [],
+          }}
         />
       )}
 
       {selectedFilterModal && (
         <FilterModal
-          filter={selectedFilterModal.filter}
-          count={selectedFilterModal.count}
           onClose={() => setSelectedFilterModal(null)}
-          data={getFilterWashingData(
-            `${selectedFilterModal.filter.brand}-${selectedFilterModal.filter.model}`
-          )}
+          data={selectedFilterModal.data}
         />
       )}
     </div>

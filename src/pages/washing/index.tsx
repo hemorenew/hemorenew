@@ -182,8 +182,7 @@ const WashingCRUD: React.FC = () => {
   };
 
   const formatDateForDisplay = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
+    return new Date(dateString).toLocaleString('es-UY', { timeZone: 'UTC' });
   };
 
   const handleSort = (field: keyof Washing) => {

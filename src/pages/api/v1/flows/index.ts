@@ -11,6 +11,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   switch (method) {
     case 'GET':
       try {
+        const { startDate } = req.query;
+
+        if (startDate) {
+          const start = new Date(startDate as string);
+          const end = new Date(start.getTime() + 20 * 60000); // 20 minutos en milisegundos
+
+          const flows = await Flow.find({
+            date: {
+              $gte: start,
+              $lte: end,
+            },
+          });
+          return res.status(200).json(flows);
+        }
+
+        // Si no hay startDate, devuelve todos los flows (comportamiento original)
         const flows = await Flow.find({});
         return res.status(200).json(flows);
       } catch (error: any) {

@@ -1,7 +1,7 @@
 {
   "name": "Hemorenew",
   "short_name": "Hemorenew",
-  "description": "Computer Vision analice media files",
+  "description": "Hemorenew is a web app that allows you to analyze media files using computer vision.",
   "icons": [
     {
       "src": "icons/icon-48x48.png",
