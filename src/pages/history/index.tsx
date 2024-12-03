@@ -187,6 +187,7 @@ const HistoryPage: React.FC = () => {
         date: u.date,
       }));
 
+      setIsModalOpen(true);
       setSelectedWashing({
         ...washing,
         temperature: temperatures.data,
@@ -194,8 +195,6 @@ const HistoryPage: React.FC = () => {
         bloodLeak: colors.data,
         flowRate: flows.data,
       });
-
-      setIsModalOpen(true);
     } catch (error) {
       console.error('Error fetching sensor data:', error);
     }
@@ -490,15 +489,18 @@ const HistoryPage: React.FC = () => {
         </div>
       </div>
 
-      {isModalOpen && selectedWashing && (
+      {isModalOpen && (
         <WashingModal
-          washing={selectedWashing}
-          onClose={() => setIsModalOpen(false)}
+          washing={selectedWashing || {}}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedWashing(null);
+          }}
           data={{
-            temperature: selectedWashing.temperature || [],
-            waterLevel: selectedWashing.waterLevel || [],
-            bloodLeak: selectedWashing.bloodLeak || false,
-            flowRate: selectedWashing.flowRate || [],
+            temperature: selectedWashing?.temperature || [],
+            waterLevel: selectedWashing?.waterLevel || [],
+            bloodLeak: selectedWashing?.bloodLeak || [],
+            flowRate: selectedWashing?.flowRate || [],
           }}
         />
       )}

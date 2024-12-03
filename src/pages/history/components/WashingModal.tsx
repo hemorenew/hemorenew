@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ArcElement,
@@ -38,6 +40,13 @@ interface WashingModalProps {
 }
 
 const WashingModal: React.FC<WashingModalProps> = ({ onClose, data }) => {
+  const safeData = {
+    temperature: data?.temperature || [],
+    waterLevel: data?.waterLevel || [],
+    bloodLeak: data?.bloodLeak || [],
+    flowRate: data?.flowRate || [],
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     date.setHours(date.getHours() + 4);
@@ -50,15 +59,15 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose, data }) => {
   };
 
   const lastWaterLevel =
-    data.waterLevel[data.waterLevel.length - 1]?.value || 0;
+    safeData.waterLevel[safeData.waterLevel.length - 1]?.value || 0;
   const residualVolume = Math.PI * Math.pow(2, 2) * lastWaterLevel;
 
   const temperatureData = {
-    labels: data.temperature.map((t) => formatDate(t.date)),
+    labels: safeData.temperature.map((t) => formatDate(t.date)),
     datasets: [
       {
         label: 'Temperatura (°C)',
-        data: data.temperature.map((t) => t.value),
+        data: safeData.temperature.map((t) => t.value),
         borderColor: 'rgb(255, 99, 132)',
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
         tension: 0.3,
@@ -67,13 +76,13 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose, data }) => {
   };
 
   const waterLevelData = {
-    labels: data.waterLevel.map((w) => formatDate(w.date)),
+    labels: safeData.waterLevel.map((w) => formatDate(w.date)),
     datasets: [
       {
         label: `Nivel de Agua (cm) - Volumen Residual: ${residualVolume.toFixed(
           2
         )}ml`,
-        data: data.waterLevel.map((w) => w.value),
+        data: safeData.waterLevel.map((w) => w.value),
         backgroundColor: 'rgba(53, 162, 235, 0.5)',
         borderColor: 'rgb(53, 162, 235)',
         borderWidth: 1,
@@ -81,7 +90,7 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose, data }) => {
     ],
   };
 
-  const hasBloodLeak = data.bloodLeak.some((b) => b.value === 'PURPURA');
+  const hasBloodLeak = safeData.bloodLeak.some((b) => b.value === 'PURPURA');
   const pressureData = {
     labels: ['Sangre Detectada', 'Sangre No Detectada'],
     datasets: [
@@ -96,11 +105,11 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose, data }) => {
   };
 
   const flowRateData = {
-    labels: data.flowRate.map((f) => formatDate(f.date)),
+    labels: safeData.flowRate.map((f) => formatDate(f.date)),
     datasets: [
       {
         label: 'Flujo (ml/min)',
-        data: data.flowRate.map((f) => f.value),
+        data: safeData.flowRate.map((f) => f.value),
         borderColor: 'rgb(153, 102, 255)',
         backgroundColor: 'rgba(153, 102, 255, 0.5)',
         tension: 0.3,
