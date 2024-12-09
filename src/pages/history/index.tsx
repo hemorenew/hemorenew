@@ -71,6 +71,15 @@ const HistoryPage: React.FC = () => {
     count: number;
   } | null>(null);
 
+  const [loadingStates, setLoadingStates] = useState({
+    colors: false,
+    flows: false,
+    temperatures: false,
+    ultrasounds: false,
+  });
+
+  const [loadingModal, setLoadingModal] = useState(false);
+
   useEffect(() => {
     fetchAllWashings();
   }, []);
@@ -171,16 +180,43 @@ const HistoryPage: React.FC = () => {
   };
 
   const handleWashingClick = async (washing: Washing) => {
+    setLoadingModal(true);
+    setLoadingStates({
+      colors: true,
+      flows: true,
+      temperatures: true,
+      ultrasounds: true,
+    });
+
     try {
       const startDate = washing.startDate;
       const params = new URLSearchParams({ startDate });
 
+      const fetchData = async (
+        url: string,
+        type: keyof typeof loadingStates
+      ) => {
+        try {
+          const response = await axios.get(`/api/v1/${url}?${params}`);
+          setLoadingStates((prev) => ({ ...prev, [type]: false }));
+          return response;
+        } catch (error) {
+          console.error(`Error fetching ${type}:`, error);
+          setLoadingStates((prev) => ({ ...prev, [type]: false }));
+          return null;
+        }
+      };
+
       const [colors, flows, temperatures, ultrasounds] = await Promise.all([
-        axios.get(`/api/v1/colors?${params}`),
-        axios.get(`/api/v1/flows?${params}`),
-        axios.get(`/api/v1/temperatures?${params}`),
-        axios.get(`/api/v1/ultrasounds?${params}`),
+        fetchData('colors', 'colors'),
+        fetchData('flows', 'flows'),
+        fetchData('temperatures', 'temperatures'),
+        fetchData('ultrasounds', 'ultrasounds'),
       ]);
+
+      if (!colors || !flows || !temperatures || !ultrasounds) {
+        throw new Error('Failed to fetch some data');
+      }
 
       const processedUltrasoundData = ultrasounds.data.map((u: any) => ({
         value: Math.max(0, 19 - (u.value - 1.7)),
@@ -197,6 +233,8 @@ const HistoryPage: React.FC = () => {
       });
     } catch (error) {
       console.error('Error fetching sensor data:', error);
+    } finally {
+      setLoadingModal(false);
     }
   };
 
@@ -489,6 +527,46 @@ const HistoryPage: React.FC = () => {
         </div>
       </div>
 
+      {loadingModal && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
+          <div className='rounded-lg bg-white p-6 shadow-xl'>
+            <h3 className='mb-4 text-lg font-semibold'>
+              Cargando datos del lavado
+            </h3>
+            <ul className='space-y-2'>
+              <li
+                className={`flex items-center gap-2 ${
+                  !loadingStates.colors ? 'text-green-600' : ''
+                }`}
+              >
+                {loadingStates.colors ? '⏳' : '✓'} Datos de color
+              </li>
+              <li
+                className={`flex items-center gap-2 ${
+                  !loadingStates.flows ? 'text-green-600' : ''
+                }`}
+              >
+                {loadingStates.flows ? '⏳' : '✓'} Datos de flujo
+              </li>
+              <li
+                className={`flex items-center gap-2 ${
+                  !loadingStates.temperatures ? 'text-green-600' : ''
+                }`}
+              >
+                {loadingStates.temperatures ? '⏳' : '✓'} Datos de temperatura
+              </li>
+              <li
+                className={`flex items-center gap-2 ${
+                  !loadingStates.ultrasounds ? 'text-green-600' : ''
+                }`}
+              >
+                {loadingStates.ultrasounds ? '⏳' : '✓'} Datos de ultrasonido
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       {isModalOpen && (
         <WashingModal
           washing={selectedWashing || {}}
@@ -502,6 +580,7 @@ const HistoryPage: React.FC = () => {
             bloodLeak: selectedWashing?.bloodLeak || [],
             flowRate: selectedWashing?.flowRate || [],
           }}
+          loadingStates={loadingStates}
         />
       )}
 

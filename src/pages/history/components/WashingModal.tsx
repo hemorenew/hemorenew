@@ -37,9 +37,19 @@ interface WashingModalProps {
     bloodLeak: { value: any; date: string }[];
     flowRate: { value: any; date: string }[];
   };
+  loadingStates?: {
+    colors: boolean;
+    flows: boolean;
+    temperatures: boolean;
+    ultrasounds: boolean;
+  };
 }
 
-const WashingModal: React.FC<WashingModalProps> = ({ onClose, data }) => {
+const WashingModal: React.FC<WashingModalProps> = ({
+  onClose,
+  data,
+  loadingStates,
+}) => {
   const safeData = {
     temperature: data?.temperature || [],
     waterLevel: data?.waterLevel || [],
@@ -200,24 +210,28 @@ const WashingModal: React.FC<WashingModalProps> = ({ onClose, data }) => {
             type='line'
             data={temperatureData}
             options={lineOptions}
+            isLoading={loadingStates?.temperatures}
           />
           <ChartCard
             title='Sensor de ultrasonido'
             type='bar'
             data={waterLevelData}
             options={barOptions}
+            isLoading={loadingStates?.ultrasounds}
           />
           <ChartCard
             title='Sensor fuga de sangre'
             type='doughnut'
             data={pressureData}
             options={doughnutOptions}
+            isLoading={loadingStates?.colors}
           />
           <ChartCard
             title='Sensor de flujo'
             type='line'
             data={flowRateData}
             options={lineOptions}
+            isLoading={loadingStates?.flows}
           />
         </div>
       </div>
@@ -230,6 +244,7 @@ interface ChartCardProps {
   type: 'line' | 'bar' | 'doughnut';
   data: any;
   options: any;
+  isLoading?: boolean;
 }
 
 const ChartCard: React.FC<ChartCardProps> = ({
@@ -237,13 +252,22 @@ const ChartCard: React.FC<ChartCardProps> = ({
   type,
   data,
   options,
+  isLoading,
 }) => (
   <div className='rounded-lg bg-gray-50 shadow-md transition-all duration-300 hover:shadow-lg md:p-4'>
     <h3 className='mb-2 text-lg font-semibold text-gray-800'>{title}</h3>
     <div className='h-64 w-fit md:h-[260px] md:w-auto'>
-      {type === 'line' && <Line options={options} data={data} />}
-      {type === 'bar' && <Bar options={options} data={data} />}
-      {type === 'doughnut' && <Doughnut options={options} data={data} />}
+      {isLoading ? (
+        <div className='flex h-full w-full items-center justify-center'>
+          <div className='h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500'></div>
+        </div>
+      ) : (
+        <>
+          {type === 'line' && <Line options={options} data={data} />}
+          {type === 'bar' && <Bar options={options} data={data} />}
+          {type === 'doughnut' && <Doughnut options={options} data={data} />}
+        </>
+      )}
     </div>
   </div>
 );
