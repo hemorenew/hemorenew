@@ -37,6 +37,7 @@ const FILTER_DATA = {
     'NIPRO 210 HR': 130,
   },
   BBraun: {
+    'Diacap Polisulfona': 110,
     'Diacap Pro 19L': 109,
     'Diacap Pro 16L': 87,
   },
