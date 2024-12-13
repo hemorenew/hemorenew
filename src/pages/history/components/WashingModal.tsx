@@ -70,7 +70,7 @@ const WashingModal: React.FC<WashingModalProps> = ({
 
   const lastWaterLevel =
     safeData.waterLevel[safeData.waterLevel.length - 1]?.value || 0;
-  const residualVolume = Math.PI * Math.pow(2, 2) * lastWaterLevel;
+  const residualVolume = Math.PI * Math.pow(2, 2) * (17.9 - lastWaterLevel);
 
   const temperatureData = {
     labels: safeData.temperature.map((t) => formatDate(t.date)),

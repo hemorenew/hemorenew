@@ -300,7 +300,7 @@ const WashingCRUD: React.FC = () => {
       const residualVolume =
         //capacidad funcional del filtro - volumen residual
         //resta ultrasonido por que esta encima de la probeta apuntando hacia el fondo 0.3 sobre la probeta
-        Math.PI * Math.pow(2, 2) * Math.max(0, 19 - (lastUltrasound - 0.3));
+        Math.PI * Math.pow(2, 2) * (17.9 - lastUltrasound);
 
       // Determinar test de integridad
       const lastColor = colors.data[colors.data.length - 1]?.value || 'BLANCO';
