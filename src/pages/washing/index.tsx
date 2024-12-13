@@ -65,58 +65,60 @@ const WashingCRUD: React.FC = () => {
     setFilteredWashings(filtered);
   }, [searchTerm, washings]);
 
-  useEffect(() => {
-    const autoUpdatePendingWashings = async () => {
-      const currentTime = new Date();
-      const pendingWashings = washings.filter(
-        (w) =>
-          w.residualVolume === 0 &&
-          (w.integrityTest === 0 || w.integrityTest === null)
-      );
+  // useEffect(() => {
+  //   const autoUpdatePendingWashings = async () => {
+  //     const currentTime = new Date();
+  //     const pendingWashings = washings.filter(
+  //       (w) =>
+  //         w.residualVolume === 0 &&
+  //         (w.integrityTest === 0 || w.integrityTest === null)
+  //     );
 
-      const washingsToUpdate = pendingWashings.filter((w) => {
-        const washingTime = new Date(w.startDate);
-        const washingTimeUY = new Date(
-          washingTime.toLocaleString('en-US', {
-            timeZone: 'America/Montevideo',
-          })
-        );
-        const currentTimeUY = new Date(
-          currentTime.toLocaleString('en-US', {
-            timeZone: 'America/Montevideo',
-          })
-        );
-        const diffInMinutes =
-          (currentTimeUY.getTime() - washingTimeUY.getTime()) / (1000 * 60);
-        return diffInMinutes >= 20;
-      });
+  //     const washingsToUpdate = pendingWashings.filter((w) => {
+  //       const washingTime = new Date(w.startDate);
+  //       const washingTimeUY = new Date(
+  //         washingTime.toLocaleString('en-US', {
+  //           timeZone: 'America/Montevideo',
+  //         })
+  //       );
+  //       const currentTimeUY = new Date(
+  //         currentTime.toLocaleString('en-US', {
+  //           timeZone: 'America/Montevideo',
+  //         })
+  //       );
+  //       const diffInMinutes =
+  //         (currentTimeUY.getTime() - washingTimeUY.getTime()) / (1000 * 60);
+  //       return diffInMinutes >= 20;
+  //     });
 
-      if (washingsToUpdate.length > 0) {
-        let successCount = 0;
-        let errorCount = 0;
+  //     if (washingsToUpdate.length > 0) {
+  //       let successCount = 0;
+  //       let errorCount = 0;
 
-        for (const washing of washingsToUpdate) {
-          const success = await updateWashingData(washing);
-          if (success) successCount++;
-          else errorCount++;
-        }
+  //       for (const washing of washingsToUpdate) {
+  //         const success = await updateWashingData(washing);
+  //         if (success) successCount++;
+  //         else errorCount++;
+  //       }
 
-        await fetchWashings();
+  //       await fetchWashings();
 
-        if (successCount > 0) {
-          toast.success(
-            `${successCount} lavados actualizados automáticamente${
-              errorCount > 0 ? `, ${errorCount} errores` : ''
-            }`
-          );
-        }
-      }
-    };
+  //       if (successCount > 0) {
+  //         toast.success(
+  //           `${successCount} lavados actualizados automáticamente${
+  //             errorCount > 0 ? `, ${errorCount} errores` : ''
+  //           }`
+  //         );
+  //       }
+  //     }
+  //   };
 
-    if (washings.length > 0) {
-      autoUpdatePendingWashings();
-    }
-  }, [washings]);
+  //   if (washings.length > 0) {
+  //     autoUpdatePendingWashings();
+  //   }
+  // }, [washings]);
+
+  // fetchWashings();
 
   const fetchWashings = async () => {
     try {
