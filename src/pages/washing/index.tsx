@@ -286,32 +286,53 @@ const WashingCRUD: React.FC = () => {
 
   const updateWashingData = async (washing: Washing) => {
     try {
-      const params = new URLSearchParams({ startDate: washing.startDate });
+      // Format date to match API requirements
+      const washingDate = new Date(washing.startDate);
+      const formattedDate = washingDate.toISOString();
+      const params = new URLSearchParams({ startDate: formattedDate });
 
-      // Obtener datos de sensores
-      const [colors, ultrasounds] = await Promise.all([
-        axios.get(`/api/v1/colors?${params}`),
-        axios.get(`/api/v1/ultrasounds?${params}`),
+      // Get sensor data with proper error handling
+      const [colorsRes, ultrasoundsRes] = await Promise.all([
+        axios.get(`/api/v1/colors?${params}`).catch(() => ({ data: [] })),
+        axios.get(`/api/v1/ultrasounds?${params}`).catch(() => ({ data: [] })),
       ]);
 
-      // Verificar si hay datos de sensores
-      if (!colors.data.length || !ultrasounds.data.length) {
-        console.log('No sensor data available for washing:', washing._id);
+      const colors = colorsRes.data || [];
+      const ultrasounds = ultrasoundsRes.data || [];
+
+      // Skip if no sensor data
+      if (!colors.length && !ultrasounds.length) {
+        console.log('No sensor data for washing:', washing._id);
         return false;
       }
 
-      // Calcular volumen residual del último valor de ultrasonido
-      const lastUltrasound =
-        ultrasounds.data[ultrasounds.data.length - 1]?.value || 0;
-      const residualVolume = Math.PI * Math.pow(2, 2) * (17.9 - lastUltrasound);
+      // Calculate residual volume from last valid ultrasound reading
+      const lastValidUltrasound = Array.isArray(
+        ultrasounds[ultrasounds.length - 1]
+      )
+        ? ultrasounds[ultrasounds.length - 1]
+            .filter((u: any) => typeof u.value === 'number' && !isNaN(u.value))
+            .pop()
+        : typeof ultrasounds[ultrasounds.length - 1]?.value === 'number' &&
+          !isNaN(ultrasounds[ultrasounds.length - 1].value)
+        ? ultrasounds[ultrasounds.length - 1]
+        : null;
 
-      // Determinar test de integridad
-      const lastColor = colors.data[colors.data.length - 1]?.value || 'BLANCO';
-      const integrityTest = lastColor === 'BLANCO' ? 1 : 2;
+      const residualVolume = lastValidUltrasound
+        ? // change 3 for 0 167 with 3.699
+          3.1416 * 4 * (17 - lastValidUltrasound.value)
+        : 0;
 
-      // Actualizar lavado solo si los valores son diferentes
+      // Get last valid color reading
+      const lastValidColor = colors
+        .filter((c: any) => c.value && typeof c.value === 'string')
+        .pop();
+
+      const integrityTest = lastValidColor?.value === 'BLANCO' ? 1 : 2;
+
+      // Only update if values changed
       if (
-        washing.residualVolume !== residualVolume ||
+        Math.abs(washing.residualVolume - residualVolume) > 0.01 ||
         washing.integrityTest !== integrityTest
       ) {
         const updatedData = {
@@ -321,15 +342,12 @@ const WashingCRUD: React.FC = () => {
         };
 
         await axios.put(`/api/v1/washings/${washing._id}`, updatedData);
-        console.log('Updated washing:', washing._id, updatedData);
-        toast.success('Lavado actualizado correctamente');
         return true;
       }
 
       return false;
     } catch (error) {
       console.error('Error updating washing:', error);
-      toast.error('Error al actualizar el lavado');
       return false;
     }
   };
