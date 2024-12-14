@@ -70,7 +70,8 @@ const WashingModal: React.FC<WashingModalProps> = ({
 
   const lastWaterLevel =
     safeData.waterLevel[safeData.waterLevel.length - 1]?.value || 0;
-  const residualVolume = Math.PI * Math.pow(2, 2) * (17.9 - lastWaterLevel);
+  // const residualVolume =  Math.PI * Math.pow(2, 2) * (17.9 - lastUltrasound);
+  const residualVolume = 3.1416 * 4 * (18.82 - lastWaterLevel);
 
   const temperatureData = {
     labels: safeData.temperature.map((t) => formatDate(t.date)),
@@ -92,7 +93,7 @@ const WashingModal: React.FC<WashingModalProps> = ({
         label: `Nivel de Agua (cm) - Volumen Residual: ${residualVolume.toFixed(
           2
         )}ml`,
-        data: safeData.waterLevel.map((w) => w.value),
+        data: safeData.waterLevel.map((w) => 3.7 - w.value),
         backgroundColor: 'rgba(53, 162, 235, 0.5)',
         borderColor: 'rgb(53, 162, 235)',
         borderWidth: 1,

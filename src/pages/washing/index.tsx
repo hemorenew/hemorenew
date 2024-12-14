@@ -294,27 +294,42 @@ const WashingCRUD: React.FC = () => {
         axios.get(`/api/v1/ultrasounds?${params}`),
       ]);
 
+      // Verificar si hay datos de sensores
+      if (!colors.data.length || !ultrasounds.data.length) {
+        console.log('No sensor data available for washing:', washing._id);
+        return false;
+      }
+
       // Calcular volumen residual del último valor de ultrasonido
       const lastUltrasound =
         ultrasounds.data[ultrasounds.data.length - 1]?.value || 0;
-      const residualVolume =
-        //capacidad funcional del filtro - volumen residual
-        //resta ultrasonido por que esta encima de la probeta apuntando hacia el fondo 0.3 sobre la probeta
-        Math.PI * Math.pow(2, 2) * (17.9 - lastUltrasound);
+      const residualVolume = Math.PI * Math.pow(2, 2) * (17.9 - lastUltrasound);
 
       // Determinar test de integridad
       const lastColor = colors.data[colors.data.length - 1]?.value || 'BLANCO';
-      const integrityTest = lastColor === 'BLANCO' ? 1 : 2; // 1: No ruptura, 2: Ruptura
+      const integrityTest = lastColor === 'BLANCO' ? 1 : 2;
 
-      // Actualizar lavado
-      await axios.put(`/api/v1/washings/${washing._id}`, {
-        residualVolume: Number(residualVolume.toFixed(2)),
-        integrityTest,
-      });
+      // Actualizar lavado solo si los valores son diferentes
+      if (
+        washing.residualVolume !== residualVolume ||
+        washing.integrityTest !== integrityTest
+      ) {
+        const updatedData = {
+          residualVolume: Number(residualVolume.toFixed(2)),
+          integrityTest,
+          status: 'COMPLETED',
+        };
 
-      return true;
+        await axios.put(`/api/v1/washings/${washing._id}`, updatedData);
+        console.log('Updated washing:', washing._id, updatedData);
+        toast.success('Lavado actualizado correctamente');
+        return true;
+      }
+
+      return false;
     } catch (error) {
       console.error('Error updating washing:', error);
+      toast.error('Error al actualizar el lavado');
       return false;
     }
   };
@@ -505,12 +520,12 @@ const WashingCRUD: React.FC = () => {
                 >
                   📊 Actualizar Pendientes
                 </button>
-                <button
+                {/* <button
                   onClick={fetchWashings}
                   className='w-full rounded-md bg-gray-500 py-2 px-4 text-white transition duration-300 hover:bg-gray-600 sm:w-auto'
                 >
                   🔄 Actualizar
-                </button>
+                </button> */}
               </div>
             </div>
 
