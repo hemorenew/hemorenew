@@ -15,7 +15,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
         if (startDate) {
           const start = new Date(startDate as string);
-          const end = new Date(start.getTime() + 20 * 60000); // 20 minutos en milisegundos
+          const end = new Date(start.getTime() + 30 * 60000); // 30 minutos en milisegundos
 
           const colors = await Color.find({
             date: {
