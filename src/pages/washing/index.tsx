@@ -296,10 +296,8 @@ const WashingCRUD: React.FC = () => {
         axios.get(`/api/v1/colors?${params}`).catch(() => ({ data: [] })),
         axios.get(`/api/v1/ultrasounds?${params}`).catch(() => ({ data: [] })),
       ]);
-
       const colors = colorsRes.data || [];
       const ultrasounds = ultrasoundsRes.data || [];
-
       // Skip if no sensor data
       if (!colors.length && !ultrasounds.length) {
         console.log('No sensor data for washing:', washing._id);
@@ -317,10 +315,8 @@ const WashingCRUD: React.FC = () => {
           !isNaN(ultrasounds[ultrasounds.length - 1].value)
         ? ultrasounds[ultrasounds.length - 1]
         : null;
-
       const residualVolume = lastValidUltrasound
-        ? // change 3 for 0 167 with 3.699
-          3.1416 * 4 * (lastValidUltrasound.value - 0.64)
+        ? 3.1416 * 4 * (17 - lastValidUltrasound.value)
         : 0;
 
       // Get last valid color reading

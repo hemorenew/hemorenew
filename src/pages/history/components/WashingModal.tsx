@@ -56,6 +56,7 @@ const WashingModal: React.FC<WashingModalProps> = ({
     bloodLeak: data?.bloodLeak || [],
     flowRate: data?.flowRate || [],
   };
+  console.log('🚀 ~ safeData.waterLevel:', safeData.waterLevel);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -72,7 +73,7 @@ const WashingModal: React.FC<WashingModalProps> = ({
     safeData.waterLevel[safeData.waterLevel.length - 1]?.value || 0;
   // const residualVolume =  Math.PI * Math.pow(2, 2) * (17.9 - lastUltrasound);
   // fix 0 decimal
-  const residualVolume = Math.max(0, 3.1416 * 4 * (lastWaterLevel - 3.344));
+  const residualVolume = Math.max(0, 3.1416 * 4 * (17 - lastWaterLevel));
 
   const temperatureData = {
     labels: safeData.temperature.map((t) => formatDate(t.date)),
@@ -91,9 +92,9 @@ const WashingModal: React.FC<WashingModalProps> = ({
     labels: safeData.waterLevel.map((w) => formatDate(w.date)),
     datasets: [
       {
-        label: `Nivel de Agua (cm) ${residualVolume.toFixed(2)}ml`,
+        label: `Nivel de Agua (cm) ${residualVolume}ml`,
         data: safeData.waterLevel.map((w) => {
-          const value = w.value - 3.344;
+          const value = 17 - w.value;
           return value <= 0.01 ? 0 : value;
         }),
         backgroundColor: 'rgba(53, 162, 235, 0.5)',

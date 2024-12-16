@@ -218,16 +218,11 @@ const HistoryPage: React.FC = () => {
         throw new Error('Failed to fetch some data');
       }
 
-      const processedUltrasoundData = ultrasounds.data.map((u: any) => ({
-        value: Math.max(0, 19 - (u.value - 1.7)),
-        date: u.date,
-      }));
-
       setIsModalOpen(true);
       setSelectedWashing({
         ...washing,
         temperature: temperatures.data,
-        waterLevel: processedUltrasoundData,
+        waterLevel: ultrasounds.data,
         bloodLeak: colors.data,
         flowRate: flows.data,
       });
