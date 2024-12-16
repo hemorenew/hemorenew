@@ -127,7 +127,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black bg-opacity-50 p-2 sm:p-4'>
-      <div className='relative h-full max-h-full w-full overflow-y-auto bg-white p-4 shadow-lg sm:rounded-lg sm:p-6 md:p-8 lg:h-auto lg:w-11/12'>
+      <div className='relative h-fit max-h-full w-full overflow-y-auto bg-white p-4 shadow-lg sm:rounded-lg sm:p-6 md:p-8 lg:h-auto lg:w-11/12'>
         <button
           className='absolute top-2 right-2 rounded-full bg-red-500 p-2 text-white transition-colors duration-200 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 sm:top-4 sm:right-4'
           onClick={onClose}
@@ -150,19 +150,19 @@ const FilterModal: React.FC<FilterModalProps> = ({
         <h2 className='mb-4 text-start text-xl font-bold sm:text-2xl md:text-3xl'>
           Historial de uso del filtro
         </h2>
-        <div className='grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2'>
+        <div className='grid sm:grid-cols-1'>
           <ChartCard
             title='Datos de uso'
             type='line'
             data={chartData}
             options={commonOptions}
           />
-          <ChartCard
+          {/* <ChartCard
             title='Capacidad funcional'
             type='line'
             data={capacityChartData}
             options={capacityOptions}
-          />
+          /> */}
         </div>
       </div>
     </div>

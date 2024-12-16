@@ -320,7 +320,7 @@ const WashingCRUD: React.FC = () => {
 
       const residualVolume = lastValidUltrasound
         ? // change 3 for 0 167 with 3.699
-          3.1416 * 4 * (17 - lastValidUltrasound.value)
+          3.1416 * 4 * (lastValidUltrasound.value - 0.64)
         : 0;
 
       // Get last valid color reading
@@ -328,7 +328,11 @@ const WashingCRUD: React.FC = () => {
         .filter((c: any) => c.value && typeof c.value === 'string')
         .pop();
 
-      const integrityTest = lastValidColor?.value === 'BLANCO' ? 1 : 2;
+      const integrityTest = ['ROJO', 'ROSADO'].includes(
+        lastValidColor?.value || ''
+      )
+        ? 2
+        : 1;
 
       // Only update if values changed
       if (
