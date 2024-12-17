@@ -243,18 +243,14 @@ const FilterCRUD: React.FC = () => {
           new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
       )
       .forEach((washing) => {
-        const key = `${washing.filter.brand}-${washing.filter.model}`;
+        const key = washing.filter._id;
         const existing = filterMap.get(key);
 
         if (existing) {
           existing.count += 1;
         } else {
           filterMap.set(key, {
-            filter: {
-              ...washing.filter,
-              firstUse: new Date(washing.startDate).toISOString(),
-              status: washing.filter.status || 'En uso',
-            },
+            filter: washing.filter,
             count: 1,
           });
         }
