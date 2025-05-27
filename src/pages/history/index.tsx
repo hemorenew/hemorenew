@@ -79,6 +79,7 @@ const HistoryPage: React.FC = () => {
   });
 
   const [loadingModal, setLoadingModal] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   useEffect(() => {
     fetchAllWashings();
@@ -179,8 +180,34 @@ const HistoryPage: React.FC = () => {
     return new Date(dateString).toLocaleString('es-UY', { timeZone: 'UTC' });
   };
 
+  // Add retry utility function before the component
+  const retryApiCall = async (
+    url: string,
+    maxRetries = 3,
+    delay = 1000
+  ): Promise<any> => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await axios.get(url, {
+          timeout: 10000, // 10 second timeout
+        });
+        return response;
+      } catch (error) {
+        console.warn(`Attempt ${attempt} failed for ${url}:`, error);
+
+        if (attempt === maxRetries) {
+          throw error;
+        }
+
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, delay * attempt));
+      }
+    }
+  };
+
   const handleWashingClick = async (washing: Washing) => {
     setLoadingModal(true);
+    setCancelLoading(false);
     setLoadingStates({
       colors: true,
       flows: true,
@@ -192,45 +219,100 @@ const HistoryPage: React.FC = () => {
       const startDate = washing.startDate;
       const params = new URLSearchParams({ startDate });
 
-      const fetchData = async (
-        url: string,
+      const fetchDataWithRetry = async (
+        endpoint: string,
         type: keyof typeof loadingStates
       ) => {
         try {
-          const response = await axios.get(`/api/v1/${url}?${params}`);
+          // Check if loading was cancelled
+          if (cancelLoading) {
+            throw new Error('Loading cancelled by user');
+          }
+
+          const response = await retryApiCall(`/api/v1/${endpoint}?${params}`);
           setLoadingStates((prev) => ({ ...prev, [type]: false }));
           return response;
         } catch (error) {
-          console.error(`Error fetching ${type}:`, error);
+          console.error(`Failed to fetch ${type} after retries:`, error);
           setLoadingStates((prev) => ({ ...prev, [type]: false }));
-          return null;
+          // Return empty data instead of null to prevent crashes
+          return { data: [] };
         }
       };
 
-      const [colors, flows, temperatures, ultrasounds] = await Promise.all([
-        fetchData('colors', 'colors'),
-        fetchData('flows', 'flows'),
-        fetchData('temperatures', 'temperatures'),
-        fetchData('ultrasounds', 'ultrasounds'),
+      // Sequential calls with individual error handling
+      const results = await Promise.allSettled([
+        fetchDataWithRetry('colors', 'colors'),
+        fetchDataWithRetry('flows', 'flows'),
+        fetchDataWithRetry('temperatures', 'temperatures'),
+        fetchDataWithRetry('ultrasounds', 'ultrasounds'),
       ]);
 
-      if (!colors || !flows || !temperatures || !ultrasounds) {
-        throw new Error('Failed to fetch some data');
+      // Check if loading was cancelled before proceeding
+      if (cancelLoading) {
+        return;
+      }
+
+      // Extract data from settled promises
+      const [colorsResult, flowsResult, temperaturesResult, ultrasoundsResult] =
+        results;
+
+      const colors =
+        colorsResult.status === 'fulfilled' ? colorsResult.value : { data: [] };
+      const flows =
+        flowsResult.status === 'fulfilled' ? flowsResult.value : { data: [] };
+      const temperatures =
+        temperaturesResult.status === 'fulfilled'
+          ? temperaturesResult.value
+          : { data: [] };
+      const ultrasounds =
+        ultrasoundsResult.status === 'fulfilled'
+          ? ultrasoundsResult.value
+          : { data: [] };
+
+      // Check if any critical data failed to load
+      const failedRequests = results.filter(
+        (result) => result.status === 'rejected'
+      ).length;
+
+      if (failedRequests > 0) {
+        console.warn(
+          `${failedRequests} requests failed, but proceeding with available data`
+        );
       }
 
       setIsModalOpen(true);
       setSelectedWashing({
         ...washing,
-        temperature: temperatures.data,
-        waterLevel: ultrasounds.data,
-        bloodLeak: colors.data,
-        flowRate: flows.data,
+        temperature: temperatures.data || [],
+        waterLevel: ultrasounds.data || [],
+        bloodLeak: colors.data || [],
+        flowRate: flows.data || [],
       });
     } catch (error) {
-      console.error('Error fetching sensor data:', error);
+      if (!cancelLoading) {
+        console.error('Critical error fetching sensor data:', error);
+        // Show error message to user
+        alert(
+          'Error al cargar los datos del lavado. Por favor, intente nuevamente.'
+        );
+      }
     } finally {
       setLoadingModal(false);
+      setCancelLoading(false);
+      // Reset all loading states
+      setLoadingStates({
+        colors: false,
+        flows: false,
+        temperatures: false,
+        ultrasounds: false,
+      });
     }
+  };
+
+  const handleCancelLoading = () => {
+    setCancelLoading(true);
+    setLoadingModal(false);
   };
 
   const getSortedWashings = () => {
@@ -524,40 +606,103 @@ const HistoryPage: React.FC = () => {
 
       {loadingModal && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
-          <div className='rounded-lg bg-white p-6 shadow-xl'>
+          <div className='mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl'>
             <h3 className='mb-4 text-lg font-semibold'>
               Cargando datos del lavado
             </h3>
-            <ul className='space-y-2'>
-              <li
-                className={`flex items-center gap-2 ${
-                  !loadingStates.colors ? 'text-green-600' : ''
+            <div className='space-y-3'>
+              <div
+                className={`flex items-center gap-3 rounded p-2 ${
+                  !loadingStates.colors
+                    ? 'bg-green-50 text-green-700'
+                    : 'bg-gray-50'
                 }`}
               >
-                {loadingStates.colors ? '⏳' : '✓'} Datos de color
-              </li>
-              <li
-                className={`flex items-center gap-2 ${
-                  !loadingStates.flows ? 'text-green-600' : ''
+                <div className='flex-shrink-0'>
+                  {loadingStates.colors ? (
+                    <div className='h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent'></div>
+                  ) : (
+                    <div className='flex h-4 w-4 items-center justify-center rounded-full bg-green-500'>
+                      <span className='text-xs text-white'>✓</span>
+                    </div>
+                  )}
+                </div>
+                <span className='font-medium'>Datos de color</span>
+              </div>
+
+              <div
+                className={`flex items-center gap-3 rounded p-2 ${
+                  !loadingStates.flows
+                    ? 'bg-green-50 text-green-700'
+                    : 'bg-gray-50'
                 }`}
               >
-                {loadingStates.flows ? '⏳' : '✓'} Datos de flujo
-              </li>
-              <li
-                className={`flex items-center gap-2 ${
-                  !loadingStates.temperatures ? 'text-green-600' : ''
+                <div className='flex-shrink-0'>
+                  {loadingStates.flows ? (
+                    <div className='h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent'></div>
+                  ) : (
+                    <div className='flex h-4 w-4 items-center justify-center rounded-full bg-green-500'>
+                      <span className='text-xs text-white'>✓</span>
+                    </div>
+                  )}
+                </div>
+                <span className='font-medium'>Datos de flujo</span>
+              </div>
+
+              <div
+                className={`flex items-center gap-3 rounded p-2 ${
+                  !loadingStates.temperatures
+                    ? 'bg-green-50 text-green-700'
+                    : 'bg-gray-50'
                 }`}
               >
-                {loadingStates.temperatures ? '⏳' : '✓'} Datos de temperatura
-              </li>
-              <li
-                className={`flex items-center gap-2 ${
-                  !loadingStates.ultrasounds ? 'text-green-600' : ''
+                <div className='flex-shrink-0'>
+                  {loadingStates.temperatures ? (
+                    <div className='h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent'></div>
+                  ) : (
+                    <div className='flex h-4 w-4 items-center justify-center rounded-full bg-green-500'>
+                      <span className='text-xs text-white'>✓</span>
+                    </div>
+                  )}
+                </div>
+                <span className='font-medium'>Datos de temperatura</span>
+              </div>
+
+              <div
+                className={`flex items-center gap-3 rounded p-2 ${
+                  !loadingStates.ultrasounds
+                    ? 'bg-green-50 text-green-700'
+                    : 'bg-gray-50'
                 }`}
               >
-                {loadingStates.ultrasounds ? '⏳' : '✓'} Datos de ultrasonido
-              </li>
-            </ul>
+                <div className='flex-shrink-0'>
+                  {loadingStates.ultrasounds ? (
+                    <div className='h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent'></div>
+                  ) : (
+                    <div className='flex h-4 w-4 items-center justify-center rounded-full bg-green-500'>
+                      <span className='text-xs text-white'>✓</span>
+                    </div>
+                  )}
+                </div>
+                <span className='font-medium'>Datos de ultrasonido</span>
+              </div>
+            </div>
+
+            <div className='mt-4 text-center text-sm text-gray-500'>
+              {Object.values(loadingStates).every((state) => !state)
+                ? 'Completado - Abriendo modal...'
+                : 'Reintentando automáticamente si es necesario...'}
+            </div>
+
+            <div className='mt-6 flex justify-center'>
+              <button
+                onClick={handleCancelLoading}
+                className='rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2'
+                disabled={Object.values(loadingStates).every((state) => !state)}
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -16,9 +16,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <AuthProvider>
-      <div className='font-primary'>
+      <div className='flex min-h-screen flex-col font-primary'>
         {!hideNavAndFooter && <Navbar />}
-        <main className='min-h-full'>{children}</main>
+        <main className='flex-1'>{children}</main>
         {!hideNavAndFooter && <Footer />}
       </div>
     </AuthProvider>
